@@ -1,0 +1,77 @@
+name: publish-team-limits
+
+# Publishes the team-limits companion bundle with npm trusted publishing (OIDC).
+# No npm token is stored: the npm CLI detects the GitHub OIDC environment and
+# exchanges the short-lived identity token for a publish credential.
+#
+# npm side (one-time), package settings -> Trusted Publisher -> GitHub Actions:
+#   Organization or user: SpaceRelay
+#   Repository:           dsh-subagent-control
+#   Workflow filename:    publish-team-limits.yml
+#   Environment name:     (leave empty)
+#   Allowed actions:      npm publish (direct publish)
+#
+# Release flow: bump team-limits/package.json -> commit -> tag team-limits-v<version>
+# -> push the tag. The tag prefix keeps this workflow independent from the main
+# package's v* tags.
+
+on:
+  push:
+    tags:
+      - "team-limits-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-team-limits
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: team-limits
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Ensure npm CLI supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          node --version
+          npm --version
+
+      - name: Refuse to publish with a token
+        run: |
+          if [ -n "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "NODE_AUTH_TOKEN is set; remove it so OIDC is used." >&2
+            exit 1
+          fi
+          if [ -f .npmrc ]; then
+            echo "Unexpected .npmrc in the checkout:" >&2
+            cat .npmrc >&2
+            exit 1
+          fi
+
+      - name: Tag must match package.json version
+        if: startsWith(github.ref, 'refs/tags/team-limits-v')
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#team-limits-v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match team-limits version $PKG_VERSION" >&2
+            exit 1
+          fi
+          echo "Publishing dsh-team-limits $PKG_VERSION"
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
