@@ -1,7 +1,7 @@
 {
   "name": "dsh-team-limits",
-  "version": "1.0.0",
-  "description": "Optional companion bundle that raises the DeepSeek Harness Agent Team limits (members, tasks, message bytes). Installs only when you ask for it; it overrides the shipped agent-team row.",
+  "version": "1.0.1",
+  "description": "Optional companion bundle that raises the DeepSeek Harness Agent Team limits (members, tasks, message bytes). It overrides the shipped agent-team row and shows one component row in the plugin panel.",
   "license": "MIT",
   "author": {
     "name": "SpaceRelay",
@@ -16,6 +16,24 @@
   "bugs": {
     "url": "https://github.com/SpaceRelay/dsh-subagent-control/issues"
   },
+  "type": "module",
+  "main": "./index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -23,11 +41,6 @@
     "agent-team",
     "team",
     "limits"
-  ],
-  "files": [
-    "cordis.patch.yml",
-    "README.md",
-    "LICENSE"
   ],
   "dsh": {
     "bundle": {

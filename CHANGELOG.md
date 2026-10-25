@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.4
+
+- The single optional `extras` row is split into four independent components, each with its own
+  switch in the plugin panel and its own localized title and description: Cross-layer relay,
+  Wait for subagents, Release subagents, Delegation budget. Enabling one registers exactly one
+  tool instead of all four.
+- Removed the `dsh-subagent-control/extras` export in favour of `./relay`, `./wait`, `./drain`
+  and `./budget`, each also exporting `package.json` and `locale/*.json` for the panel.
+- Unchanged: the base row still registers exactly the three original tools, and every component
+  still starts disabled.
+
 ## 1.0.3
 
 - `list_subagents` marks Team members, which are continuable subagents: each row carries

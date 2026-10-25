@@ -1,21 +1,18 @@
 /**
- * Offline smoke test for dsh-subagent-control/extras.
+ * Offline smoke test for the four opt-in components.
  *
- * The fake ctx mirrors the shapes the real subagent service returns. This test
- * proves the module loads, the four definitions are registry-shaped, and the
- * projection / call paths behave; it cannot prove the live Harness accepts the
- * JSON Schemas — only a real install and tool call can show that.
+ * Each component is a separate module with its own switch. The fake ctx mirrors
+ * the shapes the real subagent service returns: this proves the modules load,
+ * the definitions are registry-shaped, and the call paths behave. It cannot
+ * prove the live Harness accepts the JSON Schemas.
  */
-import { apply } from '../extras.js'
+import { apply as relayApply } from '../components/relay/index.js'
+import { apply as waitApply } from '../components/wait/index.js'
+import { apply as drainApply } from '../components/drain/index.js'
+import { apply as budgetApply } from '../components/budget/index.js'
 
 const registered = new Map()
 const calls = []
-
-const parentOf = {
-  'child-a': 'lead',
-  'grand-b': 'child-a',
-  'great-c': 'grand-b',
-}
 
 const catalog = [
   { kind: 'child', id: 'child-a', label: 'child a', mode: 'continuable', depth: 1, parentId: 'lead', hasChildren: true },
@@ -56,19 +53,23 @@ const ctx = {
   },
 }
 
-apply(ctx)
-
 const problems = []
 const check = (ok, message) => {
   if (!ok) problems.push(message)
 }
 
-const budget = registered.get('subagent_budget')
-const relay = registered.get('relay_subagent_message')
-const wait = registered.get('wait_subagents')
-const drain = registered.get('drain_subagents')
-
-check(budget && relay && wait && drain, 'all four tools registered')
+/** Each component must mount on its own and register exactly one tool. */
+for (const [label, apply, toolName] of [
+  ['relay', relayApply, 'relay_subagent_message'],
+  ['wait', waitApply, 'wait_subagents'],
+  ['drain', drainApply, 'drain_subagents'],
+  ['budget', budgetApply, 'subagent_budget'],
+]) {
+  const before = new Set(registered.keys())
+  apply(ctx)
+  const added = [...registered.keys()].filter((name) => !before.has(name))
+  check(added.length === 1 && added[0] === toolName, `${label}: registers exactly ${toolName} (got ${added.join(', ') || 'none'})`)
+}
 
 for (const [toolName, definition] of registered) {
   check(typeof definition.name === 'string' && definition.name === toolName, `${toolName}: name`)
@@ -81,6 +82,13 @@ for (const [toolName, definition] of registered) {
 
 const caller = { id: 'lead' }
 const exec = { agent: caller, signal: undefined }
+
+const budget = registered.get('subagent_budget')
+const relay = registered.get('relay_subagent_message')
+const wait = registered.get('wait_subagents')
+const drain = registered.get('drain_subagents')
+
+check(budget && relay && wait && drain, 'all four tools registered')
 
 const report = await budget.execute({}, exec)
 check(report.maxDepth === 4, `budget: maxDepth (${report.maxDepth})`)
@@ -138,4 +146,4 @@ if (problems.length > 0) {
   console.error('FAILED:\n- ' + problems.join('\n- '))
   process.exit(1)
 }
-console.log('OK: 4 extras tools, registry shape, budget projection, relay path, wait and drain calls all behave.')
+console.log('OK: 4 opt-in components mount individually; registry shape, budget projection, relay path, wait and drain calls all behave.')

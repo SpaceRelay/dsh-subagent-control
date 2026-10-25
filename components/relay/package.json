@@ -1,0 +1,5 @@
+{
+  "name": "Cross-layer relay",
+  "description": "Best-effort message relay to a deeper descendant; the middle hop must forward it.",
+  "type": "module"
+}

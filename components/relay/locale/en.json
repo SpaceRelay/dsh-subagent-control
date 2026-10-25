@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Cross-layer relay",
+    "description": "Best-effort message relay to a deeper descendant; the middle hop must forward it, and may summarize instead."
+  }
+}

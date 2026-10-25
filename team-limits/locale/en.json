@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Team Limits",
+    "description": "Raises the Agent Team limits: 32 members, 512 tasks, 128 KB messages. Overrides only the agent-team row; nothing else changes."
+  }
+}

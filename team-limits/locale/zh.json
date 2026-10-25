@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "团队限额",
+    "description": "把 Agent Team 的上限调高：成员 32、任务 512、单条消息 128 KB。只覆盖 agent-team 这一行，其它都不改。"
+  }
+}

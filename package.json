@@ -1,6 +1,6 @@
 {
   "name": "dsh-subagent-control",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Three tools — list_subagents, send_subagent_message, interrupt_subagent — that let any agent, including a team member, list, steer and stop the subagents it started.",
   "license": "MIT",
   "author": {
@@ -12,14 +12,25 @@
   "icon": "./icon.svg",
   "exports": {
     ".": "./index.js",
-    "./extras": "./extras.js",
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./relay": "./components/relay/index.js",
+    "./relay/package.json": "./components/relay/package.json",
+    "./relay/locale/*.json": "./components/relay/locale/*.json",
+    "./wait": "./components/wait/index.js",
+    "./wait/package.json": "./components/wait/package.json",
+    "./wait/locale/*.json": "./components/wait/locale/*.json",
+    "./drain": "./components/drain/index.js",
+    "./drain/package.json": "./components/drain/package.json",
+    "./drain/locale/*.json": "./components/drain/locale/*.json",
+    "./budget": "./components/budget/index.js",
+    "./budget/package.json": "./components/budget/package.json",
+    "./budget/locale/*.json": "./components/budget/locale/*.json"
   },
   "files": [
     "index.js",
-    "extras.js",
+    "components",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",

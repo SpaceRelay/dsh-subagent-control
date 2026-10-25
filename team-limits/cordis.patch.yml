@@ -1,12 +1,19 @@
-# Overrides the shipped Agent Team row. A patch that names an existing id
-# replaces that row's whole `config`, so every field is restated here; keep them
-# in sync with the host's agent-team schema when DSH changes.
+# A configuration-only bundle: the real work is the agent-team override below.
+# The inserted row registers nothing; it exists so the bundle has a resolvable
+# entry artifact and one visible component in the plugin panel.
+#
+# A patch that names an existing id replaces that row's whole `config`, so every
+# field is restated here; keep them in sync with the host's agent-team schema
+# when DSH changes.
 #
 # default -> this bundle
 #   maxMembers        16  -> 32
 #   maxTasks         256  -> 512
 #   maxMessageBytes 65536 -> 131072
 #   disposalTimeoutMs 5000 -> 5000 (unchanged)
+- insert:
+    - id: team-limits
+      name: 'dsh-team-limits'
 - id: agent-team
   config:
     maxMembers: 32

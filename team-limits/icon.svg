@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Team limits raised">
+  <title>Team limits</title>
+  <rect width="64" height="64" rx="14" fill="#1f6feb"/>
+  <g fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 33h28"/>
+    <path d="M32 26V13"/>
+    <path d="M25 20l7-7 7 7"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="21" cy="46" r="4"/>
+    <circle cx="32" cy="46" r="4"/>
+    <circle cx="43" cy="46" r="4"/>
+  </g>
+</svg>

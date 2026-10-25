@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Wait for subagents",
+    "description": "Wait for your subagents in this turn instead of ending it; a timeout never cancels them."
+  }
+}

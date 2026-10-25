@@ -1,0 +1,5 @@
+{
+  "name": "Release subagents",
+  "description": "Stop and release direct children, freeing their run; a released agent cannot be woken again.",
+  "type": "module"
+}

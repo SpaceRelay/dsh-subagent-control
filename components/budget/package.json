@@ -1,0 +1,5 @@
+{
+  "name": "Delegation budget",
+  "description": "Read-only report of the delegation budget: depth limit, levels, running and inactive counts.",
+  "type": "module"
+}

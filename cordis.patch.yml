@@ -1,6 +1,18 @@
+# Four opt-in components, each with its own switch in the plugin panel.
+# The base row is the three core tools; every component below starts disabled,
+# so a default install registers nothing beyond those three.
 - insert:
     - id: subagent-control
       name: 'dsh-subagent-control'
-    - id: subagent-control-extras
-      name: 'dsh-subagent-control/extras'
+    - id: subagent-control-relay
+      name: 'dsh-subagent-control/relay'
+      disabled: true
+    - id: subagent-control-wait
+      name: 'dsh-subagent-control/wait'
+      disabled: true
+    - id: subagent-control-drain
+      name: 'dsh-subagent-control/drain'
+      disabled: true
+    - id: subagent-control-budget
+      name: 'dsh-subagent-control/budget'
       disabled: true

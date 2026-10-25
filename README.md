@@ -82,18 +82,19 @@ The three new names were chosen precisely because they do **not** collide with t
 
 Remove or disable the bundle in the plugin panel. Nothing is left behind.
 
-### Optional extras (off by default)
+### Optional components (each off by default)
 
-The package also ships a second, **disabled-by-default** row: `subagent-control-extras`
-(`dsh-subagent-control/extras`). Nothing changes until you enable it in the plugin panel.
-When enabled it adds four tools:
+Four extra tools ship as **separate components**, each with its own row and switch in the plugin
+panel (`Cross-layer relay`, `Wait for subagents`, `Release subagents`, `Delegation budget`).
+All four start disabled; turning one on registers exactly one tool, so you can enable only what
+you need.
 
-| Tool | What it does | Risk |
-| --- | --- | --- |
-| `relay_subagent_message` | Best-effort message to a deeper descendant: delivered to the first hop with a request to forward it down | intermediate agents may summarize; not guaranteed |
-| `wait_subagents` | Wait for descendants (bounded by `timeout_seconds`) instead of ending your turn first | blocks up to the timeout |
-| `drain_subagents` | Stop **and release** direct children, unlike `interrupt_subagent`, which only stops the current turn | a released child cannot be woken by a message |
-| `subagent_budget` | Read-only report: depth limit, how deep the tree goes, running/inactive counts | none |
+| Component | Tool | What it does | Risk |
+| --- | --- | --- | --- |
+| Cross-layer relay | `relay_subagent_message` | Best-effort message to a deeper descendant: delivered to the first hop with a request to forward it down | intermediate agents may summarize; not guaranteed |
+| Wait for subagents | `wait_subagents` | Wait for descendants (bounded by `timeout_seconds`) instead of ending your turn first | blocks up to the timeout |
+| Release subagents | `drain_subagents` | Stop **and release** direct children, unlike `interrupt_subagent`, which only stops the current turn | a released child cannot be woken by a message |
+| Delegation budget | `subagent_budget` | Read-only report: depth limit, how deep the tree goes, running/inactive counts | none |
 
 A separate companion bundle, [`dsh-team-limits`](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits),
 raises the Agent Team limits (members, tasks, message bytes). It is a separate install on
@@ -180,16 +181,16 @@ plugin_manager install_bundle target "dsh-subagent-control@1.0.0"
 
 在插件面板里移除或停用即可，不会留下任何残留。
 
-### 可选扩展（默认关闭）
+### 可选组件（各自默认关闭）
 
-包内还带第二行、**默认禁用**的组件：`subagent-control-extras`（`dsh-subagent-control/extras`）。不启用它就没有任何变化；启用后多出四个工具：
+另外四个工具是**四个独立组件**，在插件面板里各有自己的一行和一个开关（中文界面显示：跨层补话 / 等待子代理 / 释放子代理 / 委派预算）。四个都默认关闭，打开哪一个就只注册那一个工具——只开你需要的。
 
-| 工具 | 作用 | 风险 |
-| --- | --- | --- |
-| `relay_subagent_message` | 跨层补话：把消息投给第一跳并请其向下转发 | 中间层可能改写，**不保证送达** |
-| `wait_subagents` | 等后代结束再收工（受 `timeout_seconds` 限制） | 会阻塞到超时 |
-| `drain_subagents` | 停止**并释放**直接子级；`interrupt_subagent` 只停当前回合 | 被释放的子级不能再靠消息唤醒 |
-| `subagent_budget` | 只读报告：深度上限、树有多深、运行/空闲数量 | 无 |
+| 组件 | 工具 | 作用 | 风险 |
+| --- | --- | --- | --- |
+| 跨层补话 | `relay_subagent_message` | 把消息投给第一跳并请它继续向下转发 | 中间层可能改写，**不保证送达** |
+| 等待子代理 | `wait_subagents` | 等后代结束再收工（受 `timeout_seconds` 限制） | 会阻塞到超时 |
+| 释放子代理 | `drain_subagents` | 停止**并释放**直接子级；`interrupt_subagent` 只停当前回合 | 被释放的子级不能再靠消息唤醒 |
+| 委派预算 | `subagent_budget` | 只读报告：深度上限、树有多深、运行/空闲数量 | 无 |
 
 另有一个独立的同伴包 [`dsh-team-limits`](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits)，用来提高 Agent Team 的成员数、任务数与消息字节上限。**它刻意做成单独安装**：它覆盖的是宿主自带的 `agent-team` 行，这种事不该偷偷发生。
 
