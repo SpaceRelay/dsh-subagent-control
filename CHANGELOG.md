@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1
+
+- Documentation: bilingual README (English + 简体中文) with usage examples, the
+  security model, and the name-collision note.
+- Release: publishing now runs on GitHub Actions with npm trusted publishing
+  (OIDC) and provenance. No npm token is stored in the repository.
+- No runtime change: the three tools and their JSON Schemas are identical to
+  1.0.0.
+
 ## 1.0.0
 
 First release.
