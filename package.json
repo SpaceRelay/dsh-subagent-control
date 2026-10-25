@@ -1,6 +1,6 @@
 {
   "name": "dsh-subagent-control",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Three tools — list_subagents, send_subagent_message, interrupt_subagent — that let any agent, including a team member, list, steer and stop the subagents it started.",
   "license": "MIT",
   "author": {
@@ -12,12 +12,14 @@
   "icon": "./icon.svg",
   "exports": {
     ".": "./index.js",
+    "./extras": "./extras.js",
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
   "files": [
     "index.js",
+    "extras.js",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
@@ -39,7 +41,7 @@
     "node": "^22.19.0 || >=24.0.0"
   },
   "scripts": {
-    "test": "node test/smoke.mjs"
+    "test": "node test/smoke.mjs && node test/smoke-extras.mjs"
   },
   "dsh": {
     "bundle": {

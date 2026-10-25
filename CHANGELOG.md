@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2
+
+- New optional `extras` component (`dsh-subagent-control/extras`), shipped **disabled**:
+  `relay_subagent_message`, `wait_subagents`, `drain_subagents`, `subagent_budget`.
+- The default install is unchanged: still exactly the three original tools while extras stays off.
+- New companion bundle `dsh-team-limits`, published separately, for raising the Agent Team
+  member/task/message limits by overriding the `agent-team` row.
+
 ## 1.0.1
 
 - Documentation: bilingual README (English + 简体中文) with usage examples, the

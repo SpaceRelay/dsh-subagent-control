@@ -1,3 +1,6 @@
 - insert:
     - id: subagent-control
       name: 'dsh-subagent-control'
+    - id: subagent-control-extras
+      name: 'dsh-subagent-control/extras'
+      disabled: true
