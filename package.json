@@ -1,0 +1,60 @@
+{
+  "name": "dsh-subagent-control",
+  "version": "1.0.0",
+  "description": "Three tools — list_subagents, send_subagent_message, interrupt_subagent — that let any agent, including a team member, list, steer and stop the subagents it started.",
+  "license": "MIT",
+  "author": {
+    "name": "SpaceRelay",
+    "url": "https://github.com/SpaceRelay"
+  },
+  "type": "module",
+  "main": "index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis-plugin",
+    "subagent",
+    "agents",
+    "agent-team",
+    "orchestration"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpaceRelay/dsh-subagent-control.git"
+  },
+  "homepage": "https://github.com/SpaceRelay/dsh-subagent-control#readme",
+  "bugs": {
+    "url": "https://github.com/SpaceRelay/dsh-subagent-control/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

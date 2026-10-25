@@ -1,0 +1,3 @@
+- insert:
+    - id: subagent-control
+      name: 'dsh-subagent-control'

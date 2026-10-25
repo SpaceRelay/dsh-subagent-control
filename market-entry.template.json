@@ -1,0 +1,36 @@
+{
+  "_comment": "Template for a market index entry (index format 1). Replace every <...> placeholder before submitting. This file is not part of the npm package.",
+  "name": "dsh-subagent-control",
+  "title": "Subagent Control",
+  "description": "Three tools that let any agent, including a team member, list, steer and stop the subagents it started.",
+  "author": "SpaceRelay",
+  "homepage": "https://github.com/SpaceRelay/dsh-subagent-control#readme",
+  "repository": {
+    "url": "https://github.com/SpaceRelay/dsh-subagent-control"
+  },
+  "metadata": {
+    "category": "agents",
+    "labels": ["agents", "capabilities"],
+    "keywords": [
+      "subagent",
+      "agents",
+      "agent-team",
+      "orchestration",
+      "list_subagents",
+      "interrupt_subagent"
+    ],
+    "sortKeys": {
+      "stars": 0
+    }
+  },
+  "versions": [
+    {
+      "version": "1.0.0",
+      "published": "<YYYY-MM-DD>",
+      "compatibility": ">=0.2.0",
+      "install": {
+        "target": "dsh-subagent-control@1.0.0"
+      }
+    }
+  ]
+}

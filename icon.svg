@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Subagent control">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#1f6feb"/>
+  <g fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round">
+    <path d="M32 20v9"/>
+    <path d="M32 29H16v8"/>
+    <path d="M32 29h16v8"/>
+    <path d="M32 29v8"/>
+  </g>
+  <circle cx="32" cy="15" r="6" fill="#ffffff"/>
+  <circle cx="16" cy="43" r="5" fill="#ffffff"/>
+  <circle cx="32" cy="43" r="5" fill="#ffffff"/>
+  <circle cx="48" cy="43" r="5" fill="#ffffff"/>
+</svg>
