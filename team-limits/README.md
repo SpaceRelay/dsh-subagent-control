@@ -2,36 +2,36 @@
 
 **English** · [简体中文](#简体中文)
 
-Optional companion bundle for [dsh-subagent-control](https://github.com/SpaceRelay/dsh-subagent-control): raises the Agent Team limits that ship with DeepSeek Harness.
+Optional companion bundle for [dsh-subagent-control](https://github.com/SpaceRelay/dsh-subagent-control): it adds editable **Team limits** fields to the plugin's own page (Settings → Plugins → Installed → Team limits), so the Agent Team limits are number fields you can change and reset — instead of values frozen in a patch file.
 
 ## English
 
-The Agent Team plugin ships with these limits:
+### What it does
 
-| Setting | Shipped default | This bundle |
+DeepSeek Harness ships the Agent Team plugin with these limits:
+
+| Setting | Shipped default | This page starts at |
 | --- | --- | --- |
 | `maxMembers` | 16 | **32** |
 | `maxTasks` | 256 | **512** |
 | `maxMessageBytes` | 65536 | **131072** |
-| `disposalTimeoutMs` | 5000 | 5000 (unchanged) |
+| `disposalTimeoutMs` | 5000 | 5000 |
 
-This is not a plugin with tools. It is a bundle whose patch targets the existing `agent-team` row and replaces its `config`. Nothing changes until you install it, which is the point: raising somebody else's limits is a deliberate choice, not a default.
-
-The bundle also mounts one tiny component row (`Team Limits`) that registers nothing. It exists so the plugin panel can show the bundle and its localized description next to its switch, instead of listing it without a component.
+The page has four number fields. Edits are written onto the shipped `agent-team` row through the host's config editor as you type (debounced, no Save button), and each field offers **Restore default** once it differs from the shipped value. The config editor persists the values in the profile patch layer and applies them on the normal Loader path. The bundle's own patch therefore holds no numbers, so a DSH upgrade that changes the shipped defaults does not silently resurrect old values.
 
 ### Before you install
 
-- **A patch replaces `config` wholesale, never deep-merges.** The four fields above are restated in this bundle for that reason; if the host adds a fifth field, this bundle will not supply it and that field falls back to its default.
-- **Restart DSH after installing.** The row is read at startup.
-- **Raising limits is not free.** More members means more concurrent model sessions; each one costs tokens and a session directory. Raise only what you actually need.
-- **Uninstall restores the shipped defaults**; nothing is written anywhere else.
+- **Restart DSH after installing**, then open Settings → Plugins → Installed → Team limits; the fields sit right below the bundle description.
+- **Values live in the profile patch layer.** Uninstalling the bundle does not roll them back; set the fields back to the shipped defaults (or remove the `agent-team` override in the profile patch) if you want the stock numbers again.
+- **Raising limits is not free.** More members means more concurrent model sessions; each one costs tokens and a session directory. Raise only what you need.
+- The client page needs the harness browser bundle; nothing is rendered in terminal-only profiles, but the limits still apply.
 
 ### Install
 
 Through the plugin panel / market, or by asking the agent:
 
 ```
-plugin_manager install_bundle target "dsh-team-limits@1.0.1"
+plugin_manager install_bundle target "dsh-team-limits@1.3.2"
 ```
 
 ### License
@@ -42,34 +42,34 @@ MIT — see [LICENSE](./LICENSE). Issues: <https://github.com/SpaceRelay/dsh-sub
 
 ## 简体中文
 
-这是 [dsh-subagent-control](https://github.com/SpaceRelay/dsh-subagent-control) 的可选同伴包，用来提高 DeepSeek Harness 自带 Agent Team 的上限。
+这是 [dsh-subagent-control](https://github.com/SpaceRelay/dsh-subagent-control) 的可选同伴包：在**插件自己的页面**上（设置 → 插件 → 已安装 → 团队限额）加一组可编辑的「团队限额」字段，把 Agent Team 的上限变成能直接填、能恢复默认的数字输入框，而不是写死在补丁文件里的值。
 
-Agent Team 插件出厂限制如下：
+### 它做什么
 
-| 配置 | 出厂默认 | 本包 |
+Agent Team 出厂限制如下：
+
+| 配置 | 出厂默认 | 本页面初始值 |
 | --- | --- | --- |
 | `maxMembers` | 16 | **32** |
 | `maxTasks` | 256 | **512** |
 | `maxMessageBytes` | 65536 | **131072** |
-| `disposalTimeoutMs` | 5000 | 5000（不变） |
+| `disposalTimeoutMs` | 5000 | 5000 |
 
-它不是一个带工具的插件，而是一个**只做覆盖的 bundle**：补丁指向现有的 `agent-team` 行，整体替换它的 `config`。不安装就完全不生效——把别人的上限改高应该是主动选择，不是默认行为。
-
-它另外会挂一个**只占位的小组件行**（团队限额），不注册任何东西；作用是让插件面板能把这一行、它的中文标题与说明和开关一起显示出来，而不是只显示一个没有组件的包。
+页面有四个数字输入框。改动边输边写（防抖，没有保存按钮），每个字段一旦偏离出厂值就会出现**恢复默认**。宿主侧的配置编辑器会把这些值写到自带的 `agent-team` 行上，持久化进 profile 的补丁层，并按正常加载流程生效。因此本包自己的补丁里不再存数值：DSH 升级改变了出厂默认，也不会悄悄把旧数字带回来。
 
 ### 安装前要知道
 
-- **补丁是整体替换 `config`，不是深合并。** 上面四个字段因此必须写全；如果宿主以后新增第五个字段，本包不会提供它，那个字段会回到默认值。
-- **安装后需要重启 DSH**，这一行在启动时读取。
-- **提高上限不是免费的。** 队友更多意味着更多并发的模型会话，每个都消耗 token 与一个会话目录；按实际需要调，不要一次拉满。
-- **卸载即恢复出厂默认**，不写任何其它位置。
+- **安装后重启 DSH**，然后打开 设置 → 插件 → 已安装 → 团队限额；输入框就在插件描述下面。
+- **数值存在 profile 的补丁层里。** 卸载本包不会把它们撤回；要恢复出厂值，请在页面上点「恢复默认」，或删除 profile 补丁里 `agent-team` 那条覆盖。
+- **提高上限不是免费的。** 队友更多意味着更多并发的模型会话，每个都消耗 token 与一个会话目录；按实际需要调。
+- 这个页面依赖 Harness 的浏览器端；纯终端 profile 不渲染页面，但限额照样生效。
 
 ### 安装
 
 在插件面板 / 市场中安装，或者让智能体执行：
 
 ```
-plugin_manager install_bundle target "dsh-team-limits@1.0.1"
+plugin_manager install_bundle target "dsh-team-limits@1.3.2"
 ```
 
 ### 许可

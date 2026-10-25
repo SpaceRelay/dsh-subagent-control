@@ -1,22 +1,11 @@
-# A configuration-only bundle: the real work is the agent-team override below.
-# The inserted row registers nothing; it exists so the bundle has a resolvable
-# entry artifact and one visible component in the plugin panel.
+# A settings-page bundle. The inserted row is the host half: it declares the
+# four limits as Config and pushes the chosen values onto the shipped
+# `agent-team` row through the config editor. The client half (dsh.client)
+# renders the page under Settings → Team limits.
 #
-# A patch that names an existing id replaces that row's whole `config`, so every
-# field is restated here; keep them in sync with the host's agent-team schema
-# when DSH changes.
-#
-# default -> this bundle
-#   maxMembers        16  -> 32
-#   maxTasks         256  -> 512
-#   maxMessageBytes 65536 -> 131072
-#   disposalTimeoutMs 5000 -> 5000 (unchanged)
+# The limits are no longer frozen here: everything the page saves is written
+# into the profile patch layer by the config editor, so this file stays free of
+# values and survives a DSH upgrade that changes the agent-team defaults.
 - insert:
     - id: team-limits
       name: 'dsh-team-limits'
-- id: agent-team
-  config:
-    maxMembers: 32
-    maxTasks: 512
-    maxMessageBytes: 131072
-    disposalTimeoutMs: 5000
