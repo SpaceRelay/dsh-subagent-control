@@ -1,0 +1,80 @@
+name: publish
+
+# Publishes to npm using trusted publishing (OIDC).
+# No npm token is stored anywhere: the npm CLI detects the GitHub OIDC
+# environment and exchanges the short-lived identity token for a publish token.
+#
+# Requirements (npm side, one-time):
+#   package settings -> Trusted Publisher -> GitHub Actions
+#     Organization or user: SpaceRelay
+#     Repository:           dsh-subagent-control
+#     Workflow filename:    publish.yml
+#     Environment name:     (leave empty)
+#     Allowed actions:      npm publish (direct publish)
+#
+# Release flow: bump version -> commit -> tag v<version> -> push tag.
+# The job refuses to run if the tag and package.json version disagree.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for OIDC / trusted publishing
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Trusted publishing only works on GitHub-hosted runners.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Ensure npm CLI supports trusted publishing
+        # Trusted publishing needs npm >= 11.5.1 and Node >= 22.14.0.
+        run: |
+          npm install -g npm@latest
+          node --version
+          npm --version
+
+      - name: Refuse to publish with a token
+        # Trusted publishing must not silently fall back to a stored token.
+        run: |
+          if [ -n "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "NODE_AUTH_TOKEN is set; remove it so OIDC is used." >&2
+            exit 1
+          fi
+          if [ -f .npmrc ]; then
+            echo "Unexpected .npmrc in the checkout:" >&2
+            cat .npmrc >&2
+            exit 1
+          fi
+
+      - name: Tag must match package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION" >&2
+            exit 1
+          fi
+          echo "Publishing dsh-subagent-control $PKG_VERSION"
+
+      - name: Offline smoke test
+        run: npm test
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
