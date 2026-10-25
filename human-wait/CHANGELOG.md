@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 — 2026-10-26
+
+First release published by GitHub Actions with npm provenance (trusted publishing).
+
+- No behaviour change from 0.1.0; the source is the same apart from this entry and the docs.
+- README: installing from the registry is now the primary route, the tarball route moved to the
+  fallback slot.
+
 ## 0.1.0 — 2026-10-26
 
 First release.

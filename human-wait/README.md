@@ -44,13 +44,17 @@ execution budget and is what the plugin enforces.
 
 The plugin is a normal DSH bundle (one inserted host row, no client half). Pick one route:
 
-**A. From a tarball, by hand.** In `<DSH_HOME>/profiles/<profile>/package.json` add the dependency
+**A. From the registry (recommended).** Use the Plugins settings page, or a
+`plugin_manager install_bundle` call in a session, with the spec `dsh-human-wait@0.1.1`; the
+plugin manager adds both the dependency and the bundle entry for you.
+
+**B. From a tarball, by hand.** In `<DSH_HOME>/profiles/<profile>/package.json` add the dependency
 and the bundle name, then install it:
 
 ```jsonc
 {
   "dependencies": {
-    "dsh-human-wait": "file:D:/path/to/dsh-human-wait-0.1.0.tgz"
+    "dsh-human-wait": "file:D:/path/to/dsh-human-wait-0.1.1.tgz"
   },
   "dsh": { "profile": { "bundles": ["dsh-human-wait"] } }
 }
@@ -60,10 +64,6 @@ and the bundle name, then install it:
 # pnpm ships with the desktop runtime
 & "$env:USERPROFILE\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\pnpm\pnpm.cjs" install --dir "$env:USERPROFILE\.dsh\profiles\desktop"
 ```
-
-**B. From the registry, once published.** Use the Plugins settings page (or a
-`plugin_manager install_bundle` call in a session) with the spec `dsh-human-wait@0.1.0`; the
-plugin manager adds both the dependency and the bundle entry for you.
 
 Then **quit DSH from the tray icon and start it again** — bundles are composed at boot. The
 Electron-managed profile cannot be booted through the `dsh` CLI (`profile "desktop" is managed

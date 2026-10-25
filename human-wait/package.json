@@ -1,6 +1,6 @@
 {
   "name": "dsh-human-wait",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pauses the PTC run_code deadline while DSH is waiting for you to answer a question, review a plan or approve a request, so long human waits are no longer reported as `execution deadline reached (120000ms)`.",
   "license": "MIT",
   "author": {
