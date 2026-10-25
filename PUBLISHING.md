@@ -59,6 +59,31 @@ If CI is unavailable, the interactive path still works:
    `Authenticate your account at:` URL — open it on the phone that holds the
    passkey and approve with the security key.
 
+## Companion packages
+
+Two subpackages ship from this repository, each with its own npm name, its own
+workflow and its own tag prefix. The workflows sit next to `publish.yml` and use
+the same trusted-publisher setup with a different workflow filename and
+`working-directory`.
+
+| Directory | npm name | Workflow | Tag |
+| --- | --- | --- | --- |
+| `team-limits/` | `dsh-team-limits` | `publish-team-limits.yml` | `team-limits-v<version>` |
+| `human-wait/` | `dsh-human-wait` | `publish-human-wait.yml` | `human-wait-v<version>` |
+
+Trusted publishing can only be bound to a name that already exists on npm, so
+the **first** release of a new companion is published by hand:
+
+```powershell
+cd human-wait
+npm test
+npm pack --dry-run   # index.js, cordis.patch.yml, locale, icon.svg, README, CHANGELOG, LICENSE, package.json
+npm publish          # publishConfig.access is already public
+```
+
+Then bind `publish-human-wait.yml` on npmjs.com as described above, and every
+later release goes through `git tag human-wait-v<version>`.
+
 ## After publishing
 
 1. `npm view dsh-subagent-control name version repository.url` → the repository

@@ -1,0 +1,25 @@
+# dsh-human-wait — the PTC run deadline stops while you are being asked.
+#
+# PTC mode gives the model one tool, `run_code`. Questions (`ask_user_question`)
+# and the plan review raised by `exit_plan_mode` are nested calls inside that
+# program, and `dsh-ptc-runtime-node` wraps the whole program in one wall-clock
+# deadline (default 120000 ms) that explicitly includes "nested tool and
+# approval waits". A slow answer therefore shows up as
+#   Error: code run failed (timeout): execution deadline reached (120000ms)
+# and the question card is interrupted.
+#
+# The inserted row is the host half. It wraps `ptcRuntime.run` (deadline moved
+# into the plugin so it can pause), and `userQuestions.ask` / `askTimed` plus
+# `approval.request` (the signal that a human is being waited on).
+#
+# Defaults: `humanWaitCapMs` 86400000 (24 h), `enabled` true.
+# Set `humanWaitCapMs: -1` for no cap at all. Any other run budget (for example
+# `timeoutMs` passed to a single `run_code` call) is still honoured for the
+# time the program actually spends executing: the plugin re-arms the deadline
+# on every accounting event, so it does not resample on a timer.
+- insert:
+    - id: human-wait
+      name: 'dsh-human-wait'
+      config:
+        enabled: true
+        humanWaitCapMs: 86400000

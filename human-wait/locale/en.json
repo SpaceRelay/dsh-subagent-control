@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Human wait",
+    "description": "Pauses the PTC run deadline while DSH is waiting for you to answer a question, review a plan or approve a request — instead of reporting `execution deadline reached (120000ms)`."
+  }
+}

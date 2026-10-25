@@ -1,0 +1,62 @@
+{
+  "name": "dsh-human-wait",
+  "version": "0.1.0",
+  "description": "Pauses the PTC run_code deadline while DSH is waiting for you to answer a question, review a plan or approve a request, so long human waits are no longer reported as `execution deadline reached (120000ms)`.",
+  "license": "MIT",
+  "author": {
+    "name": "SpaceRelay",
+    "url": "https://github.com/SpaceRelay"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpaceRelay/dsh-subagent-control.git",
+    "directory": "human-wait"
+  },
+  "homepage": "https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait#readme",
+  "bugs": {
+    "url": "https://github.com/SpaceRelay/dsh-subagent-control/issues"
+  },
+  "type": "module",
+  "main": "./index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "ptc",
+    "human-in-the-loop",
+    "timeout",
+    "ask-user-question",
+    "plan-mode"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.1 <0.3.0-0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node --test test/plugin.test.mjs"
+  }
+}
