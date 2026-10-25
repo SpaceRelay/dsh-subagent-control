@@ -21,8 +21,22 @@ const ctx = {
   },
   agents: {
     get(id) {
-      return id === 'child-running' ? { status: 'running' } : { status: 'idle' }
+      return { id, status: id === 'child-running' ? 'running' : 'idle' }
     },
+  },
+  agentTeams: {
+    listMembers() {
+      return [
+        { id: 'lead', role: 'lead', name: 'lead', status: 'running', diagnostics: [] },
+        { id: 'child-running', role: 'teammate', name: 'runner', status: 'running', diagnostics: [] },
+      ]
+    },
+    tryMembership(agent) {
+      return agent.id === 'child-running' ? { role: 'teammate', name: 'runner' } : undefined
+    },
+  },
+  get(name) {
+    return name === 'agentTeams' ? this.agentTeams : undefined
   },
   subagents: {
     async listChildren(parentId) {
@@ -80,9 +94,18 @@ check(children.length === 2, `children: one-shot filtered out (got ${children.le
 check(children[0].status === 'running' && children[1].status === 'inactive', 'children: status mapping')
 check(children[0].kind === 'child', 'children: kind')
 check(!('depth' in children[0]), 'children: no depth at top level')
+check(children[0].team === 'teammate', `children: teammate marked (${children[0].team})`)
+check(children[1].team === undefined, 'children: plain worker unmarked')
+
+const onlyWorkers = await list.execute({ include_teammates: false }, exec)
+check(
+  onlyWorkers.length === 1 && onlyWorkers[0].id === 'child-idle',
+  `children: teammates filtered (${JSON.stringify(onlyWorkers)})`,
+)
 
 const listText = list.output.render({}, children)[0].text
 check(listText.includes('child-running') && listText.split('\n').length === 2, 'children: render')
+check(listText.includes('team=teammate'), 'children: render marks the teammate')
 
 const emptyText = list.output.render({}, [])[0].text
 check(emptyText === '(no subagents)', 'children: empty render')
@@ -91,6 +114,7 @@ const descendants = await list.execute({ scope: 'descendants' }, exec)
 check(descendants.length === 2, `descendants: rows (got ${descendants.length})`)
 check(descendants[0].depth === 1 && descendants[0].parent === 'lead', 'descendants: position')
 check(descendants[1].kind === 'diagnostic' && descendants[1].reason === 'corrupt', 'descendants: diagnostic kept')
+check(descendants[0].team === 'teammate', 'descendants: teammate marked')
 check(list.output.render({}, descendants)[0].text.includes('[corrupt]'), 'descendants: diagnostic render')
 
 const sent = await send.execute({ subagent_id: 'child-running', message: 'also try e' }, exec)

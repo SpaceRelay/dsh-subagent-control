@@ -45,6 +45,8 @@ interrupt_subagent subagent_id=3b0f9c1e
 
 Each listing line is `id  status  "label"  depth=`. `status` is `running` or `inactive` — **inactive means no turn is executing, not that the subagent is gone**. Use `send_subagent_message` to wake it.
 
+Team members are continuable subagents too, so they also appear in this list, marked `team=teammate` (or `team=lead`). Pass `include_teammates: false` when you want only the plain subagents you started.
+
 ### Behaviour and limits
 
 - **One-shot subagents are hidden.** They cannot accept a follow-up message, so listing them would only invite a call that is guaranteed to fail.
@@ -140,6 +142,8 @@ interrupt_subagent subagent_id=3b0f9c1e
 ```
 
 每行格式是 `id  status  "label"  depth=`。`status` 为 `running` 或 `inactive`——**inactive 表示当前没有在跑，不代表子代理已经消失**；用 `send_subagent_message` 可以把它叫醒。
+
+团队成员本身也是可续子代理，所以同样会出现在列表里，并带 `team=teammate`（或 `team=lead`）标记；只想看自己派的普通子代理时，传 `include_teammates: false`。
 
 ### 行为与边界
 

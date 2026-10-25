@@ -37,6 +37,7 @@ const CHILD_ITEM = {
     status: { type: 'string', enum: ['running', 'inactive'] },
     parent: { type: 'string' },
     depth: { type: 'number' },
+    team: { type: 'string', enum: ['lead', 'teammate'] },
   },
 }
 
@@ -83,13 +84,42 @@ function project(agents, entry, position) {
   }
 }
 
+/**
+ * Team members are continuable subagents, so the subagent catalog cannot tell a
+ * teammate from a worker on its own. Resolve the Team role when the Agent Teams
+ * service is present, and answer `undefined` when the agent is not in a Team.
+ */
+function teamRoleResolver(ctx, caller) {
+  const teams = typeof ctx.get === 'function' ? ctx.get('agentTeams') : undefined
+  if (teams === undefined) return () => undefined
+  const roster = new Map()
+  try {
+    for (const member of teams.listMembers(caller) ?? []) roster.set(member.id, member.role)
+  } catch {
+    /* the caller is not part of a Team; the per-agent lookup below still works */
+  }
+  return (id) => {
+    const known = roster.get(id)
+    if (known !== undefined) return known
+    const agent = ctx.agents.get(id)
+    if (agent === undefined) return undefined
+    try {
+      const membership = teams.tryMembership?.(agent)
+      return membership === undefined ? undefined : membership.role
+    } catch {
+      return undefined
+    }
+  }
+}
+
 function renderEntry(entry) {
   if (entry.kind === 'diagnostic') {
     const at = entry.parent === undefined ? '' : `  parent=${entry.parent}`
     return `[${entry.reason}] ${entry.id}${at}`
   }
   const depth = entry.depth === undefined ? '' : `  depth=${entry.depth}`
-  return `${entry.id}  ${entry.status}  ${JSON.stringify(entry.label)}${depth}`
+  const team = entry.team === undefined ? '' : `  team=${entry.team}`
+  return `${entry.id}  ${entry.status}  ${JSON.stringify(entry.label)}${depth}${team}`
 }
 
 export function apply(ctx) {
@@ -100,6 +130,8 @@ export function apply(ctx) {
     description:
       'List the subagents you started, with their ids, labels and status. ' +
       'running means it is working; inactive means it is not working right now, which does not mean it is gone. ' +
+      'Team members are continuable subagents too, so they appear here marked team=teammate or team=lead; ' +
+      'use include_teammates:false when you only want the workers you started. ' +
       'You are notified when a subagent finishes, so there is no need to poll. ' +
       'Use send_subagent_message to continue a conversation with one of them.',
     parameters: {
@@ -114,6 +146,11 @@ export function apply(ctx) {
             'descendants lists the whole tree below you with each entry parent and depth; ' +
             'entries deeper than one level accept only interrupt_subagent.',
         },
+        include_teammates: {
+          type: 'boolean',
+          description:
+            'When false, leave out agents that belong to the current Team, keeping only plain subagents. Default true.',
+        },
       },
     },
     output: {
@@ -127,12 +164,22 @@ export function apply(ctx) {
     },
     async execute(args, exec) {
       const caller = requireAgent(exec, 'list_subagents')
+      const roleOf = teamRoleResolver(ctx, caller)
+      const wantsTeammates = args.include_teammates !== false
+      const emit = (entry, position) => {
+        const item = project(ctx.agents, entry, position)
+        if (item === undefined) return undefined
+        const role = roleOf(item.id)
+        if (role !== undefined) item.team = role
+        if (!wantsTeammates && role !== undefined) return undefined
+        return item
+      }
       if ((args.scope ?? 'children') === 'descendants') {
         const rows = await ctx.subagents.listDescendants(caller.id, exec.signal)
-        return rows.map((row) => project(ctx.agents, row, row)).filter(Boolean)
+        return rows.map((row) => emit(row, row)).filter(Boolean)
       }
       const rows = await ctx.subagents.listChildren(caller.id, exec.signal)
-      return rows.map((row) => project(ctx.agents, row)).filter(Boolean)
+      return rows.map((row) => emit(row)).filter(Boolean)
     },
   })
 

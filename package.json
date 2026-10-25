@@ -1,6 +1,6 @@
 {
   "name": "dsh-subagent-control",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Three tools — list_subagents, send_subagent_message, interrupt_subagent — that let any agent, including a team member, list, steer and stop the subagents it started.",
   "license": "MIT",
   "author": {

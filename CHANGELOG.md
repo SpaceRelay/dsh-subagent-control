@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3
+
+- `list_subagents` marks Team members, which are continuable subagents: each row carries
+  `team=teammate` (or `team=lead`) when the Agent Teams service can resolve it.
+- New `include_teammates` parameter (default `true`); set it to `false` to keep only plain
+  subagents. Existing behaviour is unchanged for callers that pass nothing.
+
 ## 1.0.2
 
 - New optional `extras` component (`dsh-subagent-control/extras`), shipped **disabled**:
