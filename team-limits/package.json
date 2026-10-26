@@ -1,7 +1,7 @@
 {
   "name": "dsh-team-limits",
-  "version": "1.3.2",
-  "description": "Optional companion bundle that raises the DeepSeek Harness Agent Team limits (members, tasks, message bytes). It overrides the shipped agent-team row and shows one component row in the plugin panel.",
+  "version": "1.3.4",
+  "description": "Optional companion bundle for the DeepSeek Harness Agent Team limits: members, tasks, message bytes and teardown timeout.",
   "license": "MIT",
   "author": {
     "name": "SpaceRelay",

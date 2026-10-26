@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "团队限额",
-    "description": "在插件页里调整 Agent Team 的人数、任务数、单条消息大小与清理超时。改动写入 agent-team 行，其它行不动。"
+    "description": "调整 Agent Team 的人数、任务数、单条消息大小与清理超时。"
   }
 }

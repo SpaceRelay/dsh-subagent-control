@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Team Limits",
-    "description": "Adjust Agent Team's member count, task count, message size and teardown timeout from the plugin page. Changes are written onto the agent-team row only."
+    "description": "Adjust Agent Team's member count, task count, message size and teardown timeout."
   }
 }

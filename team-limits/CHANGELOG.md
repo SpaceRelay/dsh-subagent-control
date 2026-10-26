@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.4
+
+- The panel description no longer explains where the values are stored. It names the four limits
+  and stops; the page itself shows how to edit them.
+
+## 1.3.3
+
+- Dropped the "nothing else is touched" clause from the panel description in both languages. The
+  description now states what the page does and stops there.
+
 ## 1.3.2
 
 - The panel description now says what the bundle does (adjust the Agent Team limits from the plugin
