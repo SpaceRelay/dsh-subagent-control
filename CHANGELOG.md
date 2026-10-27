@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.0.5
 
-- New companion bundle `dsh-human-wait` (`human-wait/`), published separately: it pauses the PTC
-  `run_code` execution deadline while DSH waits for a human answer, plan review or approval, so a
-  slow answer no longer ends as `code run failed (timeout): execution deadline reached (120000ms)`.
-  A plain runaway program is still stopped at the shipped budget.
+- The `subagent_budget` tool says "not running" instead of "inactive", and its line now lists how
+  many subagents sit on each level (`levels 1:3 2:1`).
+- The `drain_subagents` description no longer claims a released child can never be woken again.
+  Drain drops the activation and gives the run back; the session stays continuable, so a later
+  message cold-resumes it.
 
 ## 1.0.4
 
