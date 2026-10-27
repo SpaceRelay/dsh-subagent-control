@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "释放子代理",
-    "description": "停止并释放直接子代理，真正腾出运行实例；释放后不能再唤醒，只想停当前回合请用 interrupt_subagent。"
+    "description": "不必等它跑完，立即停止直接子代理并腾出它占用的运行实例；之后发消息仍能把它重新唤醒。想只停当前回合请用 interrupt_subagent。"
   }
 }

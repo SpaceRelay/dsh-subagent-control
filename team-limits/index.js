@@ -28,17 +28,6 @@ const DEFAULTS = {
 
 const RETRY_DELAYS = [1300, 4000, 8000]
 
-const DEBUG = 'C:/Users/Administrator/.dsh/team-limits-debug.log'
-
-async function trace(message) {
-  try {
-    const { appendFileSync } = await import('node:fs')
-    appendFileSync(DEBUG, new Date().toISOString() + ' ' + message + '\n')
-  } catch {
-    /* diagnostics must never break the plugin */
-  }
-}
-
 let Schema
 try {
   const loaded = await import('@deepseek-ai/schemastery')
@@ -121,25 +110,20 @@ function escapeTransaction(ctx, work) {
 }
 
 /** @returns {Promise<boolean>} true when another attempt is worth making. */
-async function push(ctx, desired, attempt) {
+async function push(ctx, desired) {
   return escapeTransaction(ctx, async () => {
     try {
       const rows = ctx.configEditor.configuration()
       const row = rows.find((item) => entryId(item?.entry) === 'agent-team')
       if (row === undefined) {
-        await trace('attempt ' + attempt + ': agent-team row not found')
         return true
       }
       if (alreadyApplied(row.override, desired)) {
-        await trace('attempt ' + attempt + ': already applied')
         return false
       }
       await ctx.configEditor.edit(row.entry, () => ({ ...desired }))
-      await trace('attempt ' + attempt + ': applied ' + JSON.stringify(desired))
       return false
-    } catch (error) {
-      const message = String((error && error.message) || error)
-      await trace('attempt ' + attempt + ': error=' + message)
+    } catch {
       return true
     }
   })
@@ -148,7 +132,7 @@ async function push(ctx, desired, attempt) {
 function schedule(ctx, desired, attempt) {
   const delay = RETRY_DELAYS[Math.min(attempt, RETRY_DELAYS.length - 1)]
   setTimeout(() => {
-    void push(ctx, desired, attempt).then((retry) => {
+    void push(ctx, desired).then((retry) => {
       if (retry && attempt + 1 < RETRY_DELAYS.length) schedule(ctx, desired, attempt + 1)
     })
   }, delay)
@@ -175,15 +159,6 @@ export function apply(ctx, config) {
   ctx.inject(['settings'], (child) => {
     child.settings.configure({ auto: false }, ctx.fiber)
   })
-  setTimeout(() => {
-    try {
-      const settings = ctx.get('settings')
-      const rows = settings === undefined ? [] : settings.describe()
-      void trace('namespaces=' + rows.map((row) => row.ns).join(','))
-    } catch (error) {
-      void trace('describe error=' + String((error && error.message) || error))
-    }
-  }, 3000)
   schedule(ctx, currentValues(config), 0)
   /*
    * Volatile fields are edited in place without remounting this plugin, so the

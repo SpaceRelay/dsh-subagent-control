@@ -1,6 +1,6 @@
 {
   "name": "dsh-human-wait",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "Pauses the PTC run_code deadline while DSH is waiting for you to answer a question, review a plan or approve a request, so long human waits are no longer reported as `execution deadline reached (120000ms)`.",
   "license": "MIT",
   "author": {
@@ -23,10 +23,12 @@
     ".": "./index.js",
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./client": "./client.js"
   },
   "files": [
     "index.js",
+    "client.js",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
@@ -47,6 +49,15 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
     }
   },
   "engines": {
@@ -57,6 +68,6 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node --test test/plugin.test.mjs"
+    "test": "node --test test/plugin.test.mjs test/client.test.mjs"
   }
 }

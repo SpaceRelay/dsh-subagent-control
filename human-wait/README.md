@@ -42,10 +42,11 @@ execution budget and is what the plugin enforces.
 
 ## Install
 
-The plugin is a normal DSH bundle (one inserted host row, no client half). Pick one route:
+The plugin is a normal DSH bundle: one inserted host row, plus a browser half that renders the
+settings page under **Plugins**. Pick one route:
 
 **A. From the registry (recommended).** Use the Plugins settings page, or a
-`plugin_manager install_bundle` call in a session, with the spec `dsh-human-wait@0.1.1`; the
+`plugin_manager install_bundle` call in a session, with the spec `dsh-human-wait@0.2.1`; the
 plugin manager adds both the dependency and the bundle entry for you.
 
 **B. From a tarball, by hand.** In `<DSH_HOME>/profiles/<profile>/package.json` add the dependency
@@ -54,7 +55,7 @@ and the bundle name, then install it:
 ```jsonc
 {
   "dependencies": {
-    "dsh-human-wait": "file:D:/path/to/dsh-human-wait-0.1.1.tgz"
+    "dsh-human-wait": "file:D:/path/to/dsh-human-wait-0.2.1.tgz"
   },
   "dsh": { "profile": { "bundles": ["dsh-human-wait"] } }
 }
@@ -93,7 +94,24 @@ How the clock works: the plugin re-arms a single timer on every accounting event
 wait starting or ending, or the timer itself firing), so there is no fixed sampling period and
 no configuration knob for one.
 
-Changes are read when the plugin loads, so restart DSH after editing.
+Both options are **volatile**: they are read again while the plugin is running, so a change
+takes effect within about a second and a half, with no restart. Editing the
+patch by hand is still read at boot.
+
+## Settings page
+
+The plugin ships a browser half, so it gets its own card on its page under **Plugins** (the same
+place as Team limits):
+
+- a number field for `humanWaitCapMs`, with quick buttons for 1 hour / 24 hours / unlimited;
+- an "overridden" chip and a "restore default" action for that field;
+- a one-line summary on the card itself.
+
+`enabled` stays in the patch layer (`cordis.patch.yml`), where it is read live within about a
+second and a half.
+
+The values are written back to this profile's patch layer through the normal settings path;
+uninstalling the plugin does not roll them back.
 
 ## What counts as a human wait
 

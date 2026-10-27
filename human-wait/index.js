@@ -35,6 +35,9 @@ const DEFAULT_HUMAN_WAIT_CAP_MS = 24 * 60 * 60 * 1000
 const MAX_TIMER_MS = 2_147_483_647
 const DEADLINE_MESSAGE = 'execution deadline reached'
 
+/** How often the live settings are compared against the volatile Config refs. */
+const POLL_INTERVAL_MS = 1500
+
 /** Per-run wait accounting; a run has a slot only while it is on the stack. */
 const runScope = new AsyncLocalStorage()
 
@@ -51,9 +54,9 @@ try {
 export const Config = Schema === undefined
   ? undefined
   : Schema.object({
-    enabled: Schema.boolean().default(true)
+    enabled: Schema.boolean().default(true).volatile()
       .description('Pause the PTC run deadline while a human-interaction wait is pending.'),
-    humanWaitCapMs: Schema.number().default(DEFAULT_HUMAN_WAIT_CAP_MS)
+    humanWaitCapMs: Schema.number().default(DEFAULT_HUMAN_WAIT_CAP_MS).volatile()
       .description('Longest time a run may spend waiting for a human, in milliseconds. -1 removes the cap.'),
   })
 
@@ -195,9 +198,10 @@ function enterHumanWait() {
  * Wrap one asynchronous method so callers' time is not charged to the run.
  * @param {object} host
  * @param {string} key
+ * @param {{ enabled: boolean }} live
  * @param {object} logger
  */
-function patchWaitMethod(host, key, logger) {
+function patchWaitMethod(host, key, live, logger) {
   const holder = methodHolder(host, key)
   if (holder === undefined) return undefined
 
@@ -205,6 +209,7 @@ function patchWaitMethod(host, key, logger) {
   if (isPatched(original)) return undefined
 
   const wrapped = function patchedHumanWait(...args) {
+    if (!live.enabled) return Reflect.apply(original, this, args)
     const leave = enterHumanWait()
     let result
     try {
@@ -246,10 +251,10 @@ function patchWaitMethod(host, key, logger) {
  * Wrap the run method: the runtime keeps its compile/validation, the deadline
  * moves into this plugin so it can be paused.
  * @param {object} runtime
- * @param {{ humanWaitCapMs: number }} settings
+ * @param {{ enabled: boolean, humanWaitCapMs: number }} live
  * @param {object} logger
  */
-function patchRun(runtime, settings, logger) {
+function patchRun(runtime, live, logger) {
   const holder = methodHolder(runtime, 'run')
   if (holder === undefined) return undefined
 
@@ -261,12 +266,13 @@ function patchRun(runtime, settings, logger) {
   }
 
   const wrapped = function patchedRun(spec) {
+    if (!live.enabled) return Reflect.apply(original, this, [spec])
     const budget = spec !== null && typeof spec === 'object' ? spec.timeoutMs : undefined
     if (typeof budget !== 'number' || !Number.isFinite(budget) || budget <= 0) {
       return Reflect.apply(original, this, [spec])
     }
     try {
-      return runWithPausedDeadline(original, this, spec, budget, settings, logger)
+      return runWithPausedDeadline(original, this, spec, budget, live, logger)
     } catch (error) {
       logger.warn(`could not wrap run: ${messageOf(error)} — using the shipped deadline`)
       return Reflect.apply(original, this, [spec])
@@ -294,14 +300,14 @@ function patchRun(runtime, settings, logger) {
  * @param {unknown} self
  * @param {object} spec
  * @param {number} budget
- * @param {{ humanWaitCapMs: number }} settings
+ * @param {{ enabled: boolean, humanWaitCapMs: number }} live
  * @param {object} logger
  */
-function runWithPausedDeadline(original, self, spec, budget, settings, logger) {
+function runWithPausedDeadline(original, self, spec, budget, live, logger) {
   const controller = new AbortController()
   const outer = spec.signal
   const signal = outer === undefined ? controller.signal : AbortSignal.any([outer, controller.signal])
-  const cap = settings.humanWaitCapMs === -1 ? Infinity : settings.humanWaitCapMs
+  const capOf = () => (live.humanWaitCapMs === -1 ? Infinity : live.humanWaitCapMs)
 
   let remaining = budget
   let waited = 0
@@ -344,6 +350,7 @@ function runWithPausedDeadline(original, self, spec, budget, settings, logger) {
     if (aborted || finished) return
     settle()
     if (state.waiters > 0) {
+      const cap = capOf()
       if (waited >= cap) {
         expire(`human interaction wait exceeded (${cap}ms)`)
         return
@@ -382,12 +389,38 @@ function runWithPausedDeadline(original, self, spec, budget, settings, logger) {
  * @param {object} config
  */
 export function apply(ctx, config) {
-  const settings = normalizeConfig(config)
   const logger = createLogger(ctx)
+  // The wrappers read this object on every call, so a settings-page save takes
+  // effect without reloading the bundle. `enabled` is not on that page — it is
+  // still re-read here, so turning it off through this patch file applies live.
+  // `humanWaitCapMs` is the current wait cap.
+  const live = normalizeConfig(config)
 
-  if (!settings.enabled) {
+  // Own the settings page: the browser half renders the form, so the host must
+  // not auto-generate a second one from the Config schema.
+  ctx.inject(['settings'], (child) => {
+    try {
+      child.settings.configure({ auto: false }, ctx.fiber)
+    } catch (error) {
+      logger.warn(`could not take over the settings page: ${messageOf(error)}`)
+    }
+  })
+
+  ctx.effect(() => {
+    const timer = setInterval(() => {
+      const next = normalizeConfig(config)
+      if (next.enabled === live.enabled && next.humanWaitCapMs === live.humanWaitCapMs) return
+      live.enabled = next.enabled
+      live.humanWaitCapMs = next.humanWaitCapMs
+      const cap = live.humanWaitCapMs === -1 ? 'unlimited' : `${live.humanWaitCapMs} ms`
+      logger.info(`settings changed — ${live.enabled ? `enabled, wait cap: ${cap}` : 'disabled'}`)
+    }, POLL_INTERVAL_MS)
+    if (typeof timer.unref === 'function') timer.unref()
+    return () => clearInterval(timer)
+  })
+
+  if (!live.enabled) {
     logger.info('disabled by config — leaving the shipped PTC deadline in place')
-    return
   }
 
   ctx.inject(['ptcRuntime', 'userQuestions'], (child) => {
@@ -395,13 +428,13 @@ export function apply(ctx, config) {
       const disposers = []
       try {
         for (const key of ['ask', 'askTimed']) {
-          const dispose = patchWaitMethod(child.userQuestions, key, logger)
+          const dispose = patchWaitMethod(child.userQuestions, key, live, logger)
           if (dispose !== undefined) disposers.push(dispose)
         }
-        const dispose = patchRun(child.ptcRuntime, settings, logger)
+        const dispose = patchRun(child.ptcRuntime, live, logger)
         if (dispose !== undefined) {
           disposers.push(dispose)
-          const cap = settings.humanWaitCapMs === -1 ? 'unlimited' : `${settings.humanWaitCapMs} ms`
+          const cap = live.humanWaitCapMs === -1 ? 'unlimited' : `${live.humanWaitCapMs} ms`
           logger.info(`PTC run deadlines now pause while a human is waiting (wait cap: ${cap})`)
         } else {
           logger.warn('ptcRuntime.run was not patched — human waits will still count against the run deadline')
@@ -418,6 +451,6 @@ export function apply(ctx, config) {
   })
 
   ctx.inject(['approval'], (child) => {
-    child.effect(() => patchWaitMethod(child.approval, 'request', logger) ?? (() => {}))
+    child.effect(() => patchWaitMethod(child.approval, 'request', live, logger) ?? (() => {}))
   })
 }

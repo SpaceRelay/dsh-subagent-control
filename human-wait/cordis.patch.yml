@@ -17,6 +17,12 @@
 # `timeoutMs` passed to a single `run_code` call) is still honoured for the
 # time the program actually spends executing: the plugin re-arms the deadline
 # on every accounting event, so it does not resample on a timer.
+#
+# Both options are volatile and re-read while the plugin runs, so the wait cap
+# saved from the plugin's page under Settings → Plugins takes effect within
+# about 1.5 s; `enabled` is read from here (patch edits also apply live). The
+# browser half (`client.js`, declared by `dsh.client`) renders that page; this
+# file stays free of user values.
 - insert:
     - id: human-wait
       name: 'dsh-human-wait'

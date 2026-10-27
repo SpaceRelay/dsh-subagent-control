@@ -2,8 +2,8 @@
  * Drain: stop and release direct children, freeing their run.
  *
  * interrupt_subagent only ends the current turn and keeps the activation, so a
- * stopped subagent stays in the catalog. Drain removes the run itself, which is
- * why a released child can never be woken with another message.
+ * stopped subagent stays resident. Drain drops the activation and gives the run
+ * back; the session itself stays continuable, so a later message cold-resumes it.
  */
 import { requireAgent } from '../shared.js'
 
@@ -24,9 +24,9 @@ export function apply(ctx) {
   ctx.tools.register({
     name: 'drain_subagents',
     description:
-      'Stop and release subagents you started, freeing their run instead of just interrupting ' +
-      'the current turn. Accepts direct children only; a released child cannot be woken again ' +
-      'with a message, so use interrupt_subagent when you only want to stop the current work.',
+      'Stop subagents you started without waiting for them to finish and free the run ' +
+      'they occupy. Direct children only; a later message still wakes a released child. ' +
+      'Use interrupt_subagent when you only want to stop the current work.',
     parameters: {
       type: 'object',
       additionalProperties: false,

@@ -171,15 +171,55 @@ describe('patchRun', () => {
     originalAsk = FakeQuestions.prototype.ask
   })
 
-  it('leaves the shipped deadline alone when the plugin is disabled', async () => {
+  it('delegates to the shipped deadline when the plugin is disabled', async () => {
     const harness = createHarness({ config: { enabled: false }, askMs: 400 })
     const program = async () => {
       await harness.questions.ask({ questions: [] })
       return 'done'
     }
     await assert.rejects(runProgram(harness.runtime, program), /execution deadline reached \(120ms\)/)
+    // The wrapper is installed (so the switch can be flipped at runtime) but it
+    // must pass the numeric budget straight through to the runtime.
     assert.equal(harness.runtime.received[0].timeoutMs, 120)
-    assert.equal(FakeRuntime.prototype.run, originalRun)
+  })
+
+  it('re-reads the settings while running, so a save takes effect without a reload', async () => {
+    const config = { enabled: { get: () => true }, humanWaitCapMs: { get: () => 60_000 } }
+    const harness = createHarness({ config, askMs: 400, budgetMs: 120 })
+
+    // Enabled: the 400 ms wait no longer counts against the 120 ms budget.
+    const paused = await runProgram(harness.runtime, async () => {
+      await harness.questions.ask({ questions: [] })
+      return 'done'
+    })
+    assert.equal(paused.value, 'done')
+    assert.equal(harness.runtime.received[0].timeoutMs, null)
+
+    // Disable it from the settings page; after one poll the shipped deadline applies again.
+    config.enabled.get = () => false
+    await delay(1700)
+    await assert.rejects(
+      runProgram(harness.runtime, async () => {
+        await harness.questions.ask({ questions: [] })
+        return 'done'
+      }),
+      /execution deadline reached \(120ms\)/,
+    )
+    assert.equal(harness.runtime.received[1].timeoutMs, 120)
+  })
+
+  it('re-reads a lowered wait cap while running', async () => {
+    const config = { humanWaitCapMs: { get: () => 60_000 } }
+    const harness = createHarness({ config, askMs: 500, budgetMs: 120 })
+    config.humanWaitCapMs.get = () => 100
+    await delay(1700)
+    await assert.rejects(
+      runProgram(harness.runtime, async () => {
+        await harness.questions.ask({ questions: [] })
+        return 'done'
+      }),
+      /human interaction wait exceeded \(100ms\)/,
+    )
   })
 
   it('pauses the deadline while a question is being answered', async () => {

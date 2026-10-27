@@ -40,7 +40,7 @@ export function apply(ctx) {
     name: 'subagent_budget',
     description:
       'Report the delegation budget this agent is working with: the configured depth limit, ' +
-      'how deep the agents below it already go, and how many are running. ' +
+      'how deep the agents below it already go, how many sit on each level, and how many are running. ' +
       'Read-only; it never starts, stops or messages anything.',
     parameters: { type: 'object', additionalProperties: false, properties: {} },
     output: {
@@ -48,8 +48,11 @@ export function apply(ctx) {
       render: (_args, budget) => {
         const parts = []
         if (budget.maxDepth !== undefined) parts.push(`depth limit ${budget.maxDepth}`)
-        parts.push(`${budget.running} running`, `${budget.inactive} inactive`)
+        parts.push(`${budget.running} running`, `${budget.inactive} not running`)
         if (budget.deepest !== undefined) parts.push(`deepest ${budget.deepest}`)
+        if (budget.levels !== undefined && budget.levels.length > 0) {
+          parts.push(`levels ${budget.levels.map((level) => `${level.depth}:${level.count}`).join(' ')}`)
+        }
         return [{ type: 'text', text: parts.join(', ') }]
       },
     },

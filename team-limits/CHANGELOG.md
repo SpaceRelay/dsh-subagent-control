@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.5
+
+- Removed the leftover debugging path and the trace calls that appended to it on every load. The
+  package now carries no absolute paths and writes nothing outside the profile.
+
 ## 1.3.4
 
 - The panel description no longer explains where the values are stored. It names the four limits

@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Delegation budget",
-    "description": "Read-only report of the delegation budget: depth limit, levels, running and inactive counts."
+    "description": "Read-only view of the delegation budget: depth limit, deepest level, agents per level, and running versus not-running counts."
   }
 }

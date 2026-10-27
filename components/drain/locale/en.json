@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Release subagents",
-    "description": "Stop and release direct children, freeing their run; a released agent cannot be woken again."
+    "description": "Stop direct children without waiting for them to finish and free the run they occupy; a later message can still wake them."
   }
 }

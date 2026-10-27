@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.1 — 2026-10-27
+
+- Adds a browser half (`client.js`), so the plugin gets its own settings page under **Plugins**:
+  a wait-cap field with 1 h / 24 h / unlimited quick values, an "overridden" chip and a
+  "restore default" action.
+- `enabled` and `humanWaitCapMs` are now volatile: they are re-read while the plugin runs, so a
+  save applies in about 1.5 s without restarting DSH. The wrappers also check `enabled` on
+  every call, so turning the plugin off through the patch takes effect immediately.
+- The host half takes over the settings page (`settings.configure({ auto: false })`) instead of
+  letting DSH auto-generate a second, schema-only one.
+- Tests: adds `test/client.test.mjs` (bundle id, slot key, page and summary rendering) and two
+  runtime cases for re-reading the settings.
+
 ## 0.1.1 — 2026-10-26
 
 First release published by GitHub Actions with npm provenance (trusted publishing).
