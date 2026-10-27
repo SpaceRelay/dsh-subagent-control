@@ -108,6 +108,12 @@ included — in one 120 s wall clock, so a slow answer used to surface as
 installed that wait no longer burns the budget (default cap 24 h, `-1` = unlimited) while a plain
 runaway program is still stopped at the normal budget.
 
+A sibling UI plugin, [`dsh-find-session`](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session),
+adds conversation keyword search: `Ctrl+F` searches the conversation you are in, `Ctrl+Shift+F`
+searches every stored session and lists the hits in the right sidebar. It installs separately — it
+is a browser-side panel rather than part of the subagent tooling, and the Host half only reads
+session logs.
+
 ### License
 
 MIT — see [LICENSE](./LICENSE). Issues and source live at
@@ -203,6 +209,8 @@ plugin_manager install_bundle target "dsh-subagent-control@1.0.0"
 另有一个独立的同伴包 [`dsh-team-limits`](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits)，用来提高 Agent Team 的成员数、任务数与消息字节上限。**它刻意做成单独安装**：它覆盖的是宿主自带的 `agent-team` 行，这种事不该偷偷发生。
 
 还有一个独立的同伴包 [`dsh-human-wait`](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait)，用来让 PTC 模式 `run_code` 的执行预算在「等你回答提问 / 审议计划 / 审批」期间暂停。PTC 会把整个程序——**包括嵌套的工具调用与审批等待**——包在一个 120 秒墙钟里，所以回答慢一点就会看到 `Error: code run failed (timeout): execution deadline reached (120000ms)`；装上之后这段等待不再计入预算（默认上限 24 小时，`-1` 表示不限），而普通的死循环程序仍会在原预算处被终止。**同样刻意做成单独安装**：它拦截的是宿主 `ptc-runtime` 的执行预算。
+
+另有一个独立的界面插件 [`dsh-find-session`](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session)，给会话加上关键词查找：`Ctrl+F` 搜当前这个会话，`Ctrl+Shift+F` 搜全部已存会话、命中列在右侧栏。它同样是单独安装——它是浏览器侧的查找面板，不属于子代理工具；宿主半边只读会话日志，不写任何东西。
 
 ### 许可
 

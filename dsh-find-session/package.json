@@ -1,0 +1,78 @@
+{
+  "name": "dsh-find-session",
+  "version": "0.1.0",
+  "description": "Keyword find for the conversation: in-session find bar plus a cross-session results panel, with highlight, jump and filters · 会话上下文关键词查找",
+  "icon": "./assets/icon.svg",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "plugin",
+    "search",
+    "find",
+    "session",
+    "ui"
+  ],
+  "author": {
+    "name": "SpaceRelay",
+    "url": "https://github.com/SpaceRelay"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpaceRelay/dsh-subagent-control.git",
+    "directory": "dsh-find-session"
+  },
+  "homepage": "https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session#readme",
+  "bugs": {
+    "url": "https://github.com/SpaceRelay/dsh-subagent-control/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.1 <0.3.0-0"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README.en.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "locale/*.json",
+    "assets/icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/match.test.mjs test/extract.test.mjs && node test/smoke.mjs",
+    "test:real": "node test/realdata.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

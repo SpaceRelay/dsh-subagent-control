@@ -1,0 +1,24 @@
+<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Layout follows the shipped terminal/renderer plugin artwork: a 36x36
+       canvas, a rounded tile inset from the edge (x=4 y=4 w=28 h=28 rx=8), and
+       a white stroke mark centred on the tile. The fill is the same vertical
+       light-to-dark blue gradient the sibling plugin icons use, so the rail
+       keeps one visual family. The mark is a magnifier: an 11-unit lens circle
+       and a 5.5-unit handle, drawn on a 16-unit grid then scaled 1.4x, which
+       lands the ink inside the tile with the same breathing room as the
+       neighbouring glyphs. The inner group shrinks the finished drawing to
+       26/28 of the canvas around its centre, matching the other plugin icons. -->
+  <g transform="translate(18 18) scale(0.9286) translate(-18 -18)">
+    <rect x="4" y="4" width="28" height="28" rx="8" fill="url(#session_find_blue)" />
+    <g transform="translate(8.1 8.1) scale(1.4)" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="5.5" cy="5.5" r="4.25" fill="none" />
+      <path d="M8.8 8.8 12.6 12.6" />
+    </g>
+  </g>
+  <defs>
+    <linearGradient id="session_find_blue" x1="18" y1="4" x2="18" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#69B9FF" />
+      <stop offset="1" stop-color="#324DE2" />
+    </linearGradient>
+  </defs>
+</svg>

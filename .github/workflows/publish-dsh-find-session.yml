@@ -1,0 +1,84 @@
+name: publish-dsh-find-session
+
+# Publishes the dsh-find-session bundle with npm trusted publishing (OIDC).
+# No npm token is stored: the npm CLI detects the GitHub OIDC environment and
+# exchanges the short-lived identity token for a publish credential.
+#
+# npm side (one-time), package settings -> Trusted Publisher -> GitHub Actions:
+#   Organization or user: SpaceRelay
+#   Repository:           dsh-subagent-control
+#   Workflow filename:    publish-dsh-find-session.yml
+#   Environment name:     (leave empty)
+#   Allowed actions:      npm publish (direct publish)
+#
+# A new npm name cannot be bound to a trusted publisher before it exists, so the
+# very first publish of dsh-find-session is done manually (see PUBLISHING.md);
+# the workflow takes over from the next release on.
+#
+# Release flow: bump dsh-find-session/package.json -> commit ->
+# tag dsh-find-session-v<version> -> push the tag. The tag prefix keeps this
+# workflow independent from the main package's v* and the other companions'.
+
+on:
+  push:
+    tags:
+      - "dsh-find-session-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-dsh-find-session
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dsh-find-session
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Ensure npm CLI supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          node --version
+          npm --version
+
+      - name: Refuse to publish with a token
+        run: |
+          if [ -n "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "NODE_AUTH_TOKEN is set; remove it so OIDC is used." >&2
+            exit 1
+          fi
+          if [ -f .npmrc ]; then
+            echo "Unexpected .npmrc in the checkout:" >&2
+            cat .npmrc >&2
+            exit 1
+          fi
+
+      - name: Tag must match package.json version
+        if: startsWith(github.ref, 'refs/tags/dsh-find-session-v')
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#dsh-find-session-v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match dsh-find-session version $PKG_VERSION" >&2
+            exit 1
+          fi
+          echo "Publishing dsh-find-session $PKG_VERSION"
+
+      - name: Offline smoke test
+        run: npm test
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public

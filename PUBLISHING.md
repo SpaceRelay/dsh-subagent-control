@@ -61,15 +61,16 @@ If CI is unavailable, the interactive path still works:
 
 ## Companion packages
 
-Two subpackages ship from this repository, each with its own npm name, its own
-workflow and its own tag prefix. The workflows sit next to `publish.yml` and use
-the same trusted-publisher setup with a different workflow filename and
-`working-directory`.
+Two companion packages and one sibling UI plugin ship from this repository, each
+with its own npm name, its own workflow and its own tag prefix. The workflows sit
+next to `publish.yml` and use the same trusted-publisher setup with a different
+workflow filename and `working-directory`.
 
 | Directory | npm name | Workflow | Tag |
 | --- | --- | --- | --- |
 | `team-limits/` | `dsh-team-limits` | `publish-team-limits.yml` | `team-limits-v<version>` |
 | `human-wait/` | `dsh-human-wait` | `publish-human-wait.yml` | `human-wait-v<version>` |
+| `dsh-find-session/` | `dsh-find-session` | `publish-dsh-find-session.yml` | `dsh-find-session-v<version>` |
 
 Trusted publishing can only be bound to a name that already exists on npm, so
 the **first** release of a new companion is published by hand:
