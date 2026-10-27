@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 — 2026-10-27
+
+First release published by GitHub Actions with npm provenance (trusted publishing).
+
+- No behaviour change from 0.1.0; the source is the same apart from this entry and
+  the version bump. The point of the release is to prove the OIDC pipeline
+  (`publish-dsh-find-session.yml`, tag `dsh-find-session-v*`) end to end.
+
 ## 0.1.0 — 2026-10-27
 
 First release.

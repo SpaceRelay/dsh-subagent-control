@@ -1,6 +1,6 @@
 {
   "name": "dsh-find-session",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Keyword find for the conversation: in-session find bar plus a cross-session results panel, with highlight, jump and filters · 会话上下文关键词查找",
   "icon": "./assets/icon.svg",
   "keywords": [
