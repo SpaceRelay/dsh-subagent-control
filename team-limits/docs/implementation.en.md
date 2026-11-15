@@ -28,8 +28,9 @@ message-size and teardown knobs went away with the old implementation.
   volatile.
 - `client.js` — the browser half, hand-written with no build step, registered on the
   `plugins.bundle.config` slot with key `dsh-team-limits`. One number field (task limit) and one
-  switch (teams on by default), saved as you type (700 ms debounce), each with an "overridden" chip
-  and "restore default", plus a card summary such as `1024 tasks · off by default`.
+  switch (teams on by default); edits stay in a local draft until **Save** writes them back to
+  `Config` (**Discard changes** drops the draft), each field with an "overridden" chip and
+  "restore default", plus a card summary such as `1024 tasks · off by default`.
 - `cordis.patch.yml` — inserts one `team-limits` row and holds no numbers.
 
 ## Why the removed keys must be deleted

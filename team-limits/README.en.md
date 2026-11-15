@@ -27,7 +27,7 @@ Requires DSH 0.2.2 or newer.
 | Tasks | 256 | How many tasks the shared board keeps at once |
 | Teams on by default | Off | Whether a new session starts with Team collaboration on |
 
-Edits are saved as you type — there is no Save button. As soon as a field differs from the shipped value, **Restore default** appears next to it.
+Nothing is written until you press **Save**; **Discard changes** puts the fields back. As soon as a field differs from the shipped value, **Restore default** appears next to it.
 
 ## Good to know
 

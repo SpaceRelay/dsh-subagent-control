@@ -1,6 +1,6 @@
 {
   "name": "dsh-team-limits",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Set the Agent Team task limit and whether new sessions start with teams on.",
   "license": "MIT",
   "author": {

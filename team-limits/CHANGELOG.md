@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+
+The settings page no longer writes while you type. Fields now hold a local draft; **Save** writes
+them, **Discard changes** throws the draft away. That matches the shipped settings pages and stops
+the page from saving a half-typed number or fighting a value another window just changed.
+
 ## 2.0.0
 
 **Breaking — DSH 0.2.2 removed three of the four settings.**

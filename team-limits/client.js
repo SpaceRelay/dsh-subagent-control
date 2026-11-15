@@ -64,6 +64,10 @@ window.__ModuleLoader__.load({
         'This connection cannot write settings, so this page is read-only.',
       ],
       saveFailed: ['保存失败：', 'Save failed: '],
+      save: ['保存', 'Save'],
+      saving: ['保存中…', 'Saving…'],
+      discard: ['放弃更改', 'Discard changes'],
+      saved: ['已保存', 'Saved'],
       note: [
         '这些设置保存在你本机的 DSH 配置里，不属于这个插件。',
         'These settings persist in DSH on this machine; they do not belong to this plugin.',
@@ -104,6 +108,12 @@ window.__ModuleLoader__.load({
       '.dtl-switch { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; cursor: pointer; min-height: 38px; }',
       '.dtl-switch:has(input:disabled) { opacity: .45; cursor: default; }',
       '.dtl-switch-input { width: 16px; height: 16px; margin: 0; accent-color: rgba(76,139,245,.95); cursor: inherit; }',
+      '.dtl-actions { display: flex; align-items: center; gap: 10px; padding-top: 2px; }',
+      '.dtl-save { height: 32px; padding: 0 16px; font-size: 13px; border-radius: 8px; border: 1px solid rgba(76,139,245,.55); background: rgba(76,139,245,.9); color: #fff; cursor: pointer; }',
+      '.dtl-save:disabled { opacity: .45; cursor: default; }',
+      '.dtl-cancel { height: 32px; padding: 0 12px; font-size: 12.5px; border-radius: 8px; border: none; background: none; color: inherit; opacity: .6; cursor: pointer; }',
+      '.dtl-cancel:disabled { opacity: .3; cursor: default; }',
+      '.dtl-notice { font-size: 12.5px; opacity: .7; margin: 0; }',
     ].join('\n')
 
     function numberOr(value, fallback) {
@@ -216,9 +226,19 @@ window.__ModuleLoader__.load({
       var error = errorPair[0]
       var setError = errorPair[1]
 
-      var pendingPair = React.useState({})
-      var pending = pendingPair[0]
-      var setPending = pendingPair[1]
+      var savingPair = React.useState(false)
+      var saving = savingPair[0]
+      var setSaving = savingPair[1]
+
+      var noticePair = React.useState('')
+      var notice = noticePair[0]
+      var setNotice = noticePair[1]
+
+      var saved = valuesOf(snapshot.value)
+      var dirtyKeys = Object.keys(draft).filter(function (name) {
+        return draft[name] !== saved[name]
+      })
+      var dirty = dirtyKeys.length > 0
 
       React.useEffect(function () {
         var off = form.subscribe(function () {
@@ -229,49 +249,18 @@ window.__ModuleLoader__.load({
       }, [form])
 
       React.useEffect(function () {
-        var next = valuesOf(snapshot.value)
-        var keys = Object.keys(pending)
-        setDraft(function (previous) {
-          var merged = {}
-          for (var name in previous) merged[name] = previous[name]
-          for (var name in next) {
-            if (keys.indexOf(name) < 0) merged[name] = next[name]
-          }
-          return merged
-        })
+        if (dirtyKeys.length > 0) return
+        setDraft(valuesOf(snapshot.value))
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [snapshot.value])
 
-      React.useEffect(function () {
-        var keys = Object.keys(pending)
-        if (keys.length === 0) return undefined
-        var timer = setTimeout(function () {
-          var chain = Promise.resolve()
-          keys.forEach(function (key) {
-            chain = chain.then(function () {
-              return form.set(key, pending[key])
-            })
-          })
-          chain
-            .then(function () {
-              setPending({})
-            })
-            .catch(function (caught) {
-              setPending({})
-              setError(t('saveFailed') + String((caught && caught.message) || caught))
-            })
-        }, 700)
-        return function () {
-          clearTimeout(timer)
-        }
-      }, [pending, form])
-
       var ready = snapshot.status === 'ready'
-      var disabled = !ready
+      var disabled = !ready || saving
 
-      function write(key, value) {
+      function setField(key, value) {
         setError('')
-        setPending(function (previous) {
+        setNotice('')
+        setDraft(function (previous) {
           var next = {}
           for (var name in previous) next[name] = previous[name]
           next[key] = value
@@ -280,36 +269,50 @@ window.__ModuleLoader__.load({
       }
 
       function onInput(key, raw) {
+        if (raw === '') return
         var parsed = Number(raw)
         var safe = Number.isFinite(parsed) ? Math.max(1, Math.floor(parsed)) : DEFAULTS[key]
-        setDraft(function (previous) {
-          var next = {}
-          for (var name in previous) next[name] = previous[name]
-          next[key] = safe
-          return next
-        })
-        if (raw === '') return
-        write(key, safe)
+        setField(key, safe)
       }
 
       function onToggle(key, checked) {
-        setDraft(function (previous) {
-          var next = {}
-          for (var name in previous) next[name] = previous[name]
-          next[key] = checked
-          return next
-        })
-        write(key, checked)
+        setField(key, checked)
       }
 
       function onReset(key) {
-        setDraft(function (previous) {
-          var next = {}
-          for (var name in previous) next[name] = previous[name]
-          next[key] = DEFAULTS[key]
-          return next
+        setField(key, DEFAULTS[key])
+      }
+
+      function onDiscard() {
+        setError('')
+        setNotice('')
+        setDraft(valuesOf(snapshot.value))
+      }
+
+      function onSave() {
+        if (!dirty || saving) return
+        var keys = Object.keys(draft).filter(function (name) {
+          return draft[name] !== saved[name]
         })
-        write(key, DEFAULTS[key])
+        if (keys.length === 0) return
+        setSaving(true)
+        setError('')
+        setNotice('')
+        var chain = Promise.resolve()
+        keys.forEach(function (key) {
+          chain = chain.then(function () {
+            return form.set(key, draft[key])
+          })
+        })
+        chain
+          .then(function () {
+            setSaving(false)
+            setNotice(t('saved'))
+          })
+          .catch(function (caught) {
+            setSaving(false)
+            setError(t('saveFailed') + String((caught && caught.message) || caught))
+          })
       }
 
       if (summary) {
@@ -317,8 +320,8 @@ window.__ModuleLoader__.load({
           'span',
           { className: 'dtl-summary' },
           [
-            draft.maxTasks + (isZh() ? ' 任务' : ' tasks'),
-            draft.defaultEnabled
+            saved.maxTasks + (isZh() ? ' 任务' : ' tasks'),
+            saved.defaultEnabled
               ? isZh()
                 ? '默认开启'
                 : 'on by default'
@@ -360,6 +363,24 @@ window.__ModuleLoader__.load({
         ready ? null : h('p', { className: 'dtl-foot' }, t(snapshot.status === 'unavailable' ? 'unavailable' : 'loading')),
         groups,
         error ? h('p', { className: 'dtl-error' }, error) : null,
+        dirty || saving
+          ? h(
+              'div',
+              { className: 'dtl-actions' },
+              h(
+                'button',
+                { type: 'button', className: 'dtl-save', disabled: !ready || saving, onClick: onSave },
+                saving ? t('saving') : t('save'),
+              ),
+              h(
+                'button',
+                { type: 'button', className: 'dtl-cancel', disabled: saving, onClick: onDiscard },
+                t('discard'),
+              ),
+            )
+          : notice
+            ? h('p', { className: 'dtl-notice' }, notice)
+            : null,
         h('p', { className: 'dtl-foot' }, t('note')),
       )
     }
