@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.6
+
+- Declares `engines` (`node` and `dsh`). The package declared neither, so the installer could not
+  check it against the running harness.
+
 ## 1.3.5
 
 - Removed the leftover debugging path and the trace calls that appended to it on every load. The

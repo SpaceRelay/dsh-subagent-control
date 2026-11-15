@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6
+
+- Declares the harness versions this bundle supports: `engines.dsh` is now
+  `>=0.2.1-rc.1 <0.3.0-0`. The field was absent, so the installer had nothing to check against
+  the running harness before installing.
+
 ## 1.0.5
 
 - The `subagent_budget` tool says "not running" instead of "inactive", and its line now lists how
