@@ -51,7 +51,7 @@ The plugin is a normal DSH bundle (one host row plus a browser half). Pick one r
 & "$env:USERPROFILE\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\pnpm\pnpm.cjs" install --dir "$env:USERPROFILE\.dsh\profiles\desktop"
 ```
 
-**B. From the registry, once published.** Use the Plugins settings page (or a `plugin_manager install_bundle` call in a session) with the spec `dsh-find-session@0.1.0`; the plugin manager adds both the dependency and the bundle entry for you.
+**B. From the registry, once published.** Use the Plugins settings page (or a `plugin_manager install_bundle` call in a session) with the spec `dsh-find-session@0.1.2`; the plugin manager adds both the dependency and the bundle entry for you.
 
 Then **quit DSH from the tray icon and start it again** — bundles are composed at boot. The Electron-managed profile cannot be booted through the `dsh` CLI (`profile "desktop" is managed exclusively by the Electron application`), so restarting the app is the only way to apply it. Removing the bundle name from `dsh.profile.bundles` and deleting the dependency disables the plugin again.
 

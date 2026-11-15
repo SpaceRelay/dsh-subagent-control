@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.2 — 2026-11-15
+
+The shortcut commands now declare the two fields the host reads unconditionally,
+so the keyboard reference page stops crashing and a shortcut invoked from a menu
+with a modal open returns instead of throwing. Thanks to @deepseekmaid for
+reporting it and sending the fix (#2).
+
+- Every command carries `aliases`, so Settings → Shortcuts can build its rows
+  instead of throwing `row.aliases is not iterable`.
+- Every command carries `modals: []`, so a native menu invocation with a modal
+  open returns instead of throwing on `undefined.includes`.
+
 ## 0.1.1 — 2026-10-27
 
 First release published by GitHub Actions with npm provenance (trusted publishing).

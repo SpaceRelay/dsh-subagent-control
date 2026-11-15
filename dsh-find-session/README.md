@@ -51,7 +51,7 @@ DSH 自带的会话搜索（`dsh-experimental-session-search`）是**模型侧**
 & "$env:USERPROFILE\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\pnpm\pnpm.cjs" install --dir "$env:USERPROFILE\.dsh\profiles\desktop"
 ```
 
-**B. 发布后从 registry 装。** 用 设置 → 插件 页面，或者在会话里调 `plugin_manager install_bundle`，spec 写 `dsh-find-session@0.1.0`——插件管理器会把依赖和 bundle 条目一起加好。
+**B. 发布后从 registry 装。** 用 设置 → 插件 页面，或者在会话里调 `plugin_manager install_bundle`，spec 写 `dsh-find-session@0.1.2`——插件管理器会把依赖和 bundle 条目一起加好。
 
 然后**从托盘退出 DSH 再启动**——bundle 在启动时组合。Electron 托管的 profile 不能用 `dsh` CLI 启动（会报 `profile "desktop" is managed exclusively by the Electron application`），只能重启应用。想关掉插件就把 `dsh.profile.bundles` 里的名字删掉、依赖删掉。
 
