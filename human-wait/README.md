@@ -45,11 +45,9 @@ Error: code run failed (timeout): execution deadline reached (120000ms)
 
 ## 常见问题
 
-**还是超时了？** 确认三件事：会话头部显示 PTC 标记；插件的 `enabled` 没在 profile 补丁里被关掉；日志里有 `[dsh-human-wait]` 开头的那行说明。如果等待期间恰好插件没看到这次等待，它就不会暂停计时。
+**还是超时了？** 看三处：会话头部有 PTC 标记；插件处于启用状态；等待发生的时候插件确实在运行。三者有一个不成立，它就没法替你暂停计时。
 
 **报错变成 `abort` 了？** 正常。插件是自己主动叫停的，所以类型标成 `abort` 而不是 `timeout`，提示文字里照样有 `execution deadline reached`。
-
-**普通会话受影响吗？** 不受影响。普通会话本来就会一直等你回答，没有这个超时。
 
 ## 隐私与开销
 

@@ -45,11 +45,9 @@ A change takes effect in about 1.5 seconds, no restart.
 
 ## FAQ
 
-**It still timed out?** Check three things: the session header shows the `PTC` badge; the plugin's `enabled` is not set to false in the profile patch; the log has a line starting with `[dsh-human-wait]`. If the wrapper did not see that wait, it cannot pause for it.
+**It still timed out?** Check three things: the session header shows the `PTC` badge; the plugin is enabled; the plugin was running when that wait happened. If any of the three is missing, it cannot pause the clock for you.
 
-**The error kind became `abort`?** Expected. The plugin aborts through its own signal, so the runtime classifies it as `abort` instead of `timeout`; the text still contains `execution deadline reached`.
-
-**Does it affect standard sessions?** No. Standard sessions never had this timeout — they wait indefinitely by design.
+**The error kind became `abort`?** Expected. The plugin stops the run itself, so the type reads `abort` instead of `timeout`; the text still contains `execution deadline reached`.
 
 ## Privacy and cost
 
