@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Team Limits",
-    "description": "Adjust Agent Team's member count, task count, message size and teardown timeout."
+    "description": "Set the Agent Team task limit and whether new sessions start with teams on."
   }
 }

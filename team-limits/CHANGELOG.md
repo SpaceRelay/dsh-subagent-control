@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0
+
+**Breaking — DSH 0.2.2 removed three of the four settings.**
+
+DSH 0.2.2 promoted the experimental Agent Team plugin (`@deepseek-ai/dsh-experimental-agent-team`)
+to `@deepseek-ai/dsh-agent-team` and cut its config down to two keys. Members, message bytes and
+teardown timeout are gone: teammates are plain subagents now, so those limits live on the subagent
+side. The team row rejects the old keys outright, so this release:
+
+- keeps only `maxTasks` (task-board capacity) and `defaultEnabled` (whether a new session starts
+  with Team collaboration on);
+- deletes `maxMembers`, `maxMessageBytes` and `disposalTimeoutMs` from the team row when it pushes,
+  so an upgrade cannot leave the row in a state that refuses to load;
+- replaces the four-field page with a number field and a switch;
+- requires DSH `>=0.2.2-rc.1`. On 0.2.1 the three old settings still exist, so stay on 1.3.x there.
+
 ## 1.3.8
 
 Documentation only, no behaviour change.

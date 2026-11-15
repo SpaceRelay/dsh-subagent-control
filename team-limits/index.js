@@ -1,10 +1,14 @@
 /**
  * dsh-team-limits — Host half.
  *
- * The four Agent Team limits are this plugin's Config, so the browser half can
- * render them as a real settings page. `apply` pushes the chosen values onto
- * the shipped `agent-team` row through the config editor, which persists them
- * in the profile patch layer and applies them on the normal Loader path.
+ * DSH 0.2.2 turned Team into a per-session switch and cut the shipped
+ * `agent-team` row down to two settings: the task-board capacity and whether a
+ * new session starts with teams on. This plugin is the page for those two, so
+ * they reach users without a hand-edited patch.
+ *
+ * `apply` pushes the chosen values onto the shipped `agent-team` row through
+ * the config editor, which persists them in the profile patch layer and
+ * applies them on the normal Loader path.
  *
  * The editor refuses to run inside an existing HMR transaction ("HMR
  * transactions cannot be nested"). Our apply() runs inside the transaction
@@ -20,11 +24,16 @@ export const name = 'dsh-team-limits'
 export const inject = ['configEditor']
 
 const DEFAULTS = {
-  maxMembers: 32,
-  maxTasks: 512,
-  maxMessageBytes: 131072,
-  disposalTimeoutMs: 5000,
+  maxTasks: 256,
+  defaultEnabled: false,
 }
+
+/**
+ * Settings the shipped row no longer accepts. Since 0.2.2 teammates are plain
+ * subagents, so these keys exist nowhere; writing one back makes the row throw
+ * `TEAM_INVALID_CONFIG` at load. The push therefore deletes them.
+ */
+const REMOVED = ['maxMembers', 'maxMessageBytes', 'disposalTimeoutMs']
 
 const RETRY_DELAYS = [1300, 4000, 8000]
 
@@ -40,39 +49,26 @@ export const Config =
   Schema === undefined
     ? undefined
     : Schema.object({
-        maxMembers: Schema.natural()
-          .min(1)
-          .volatile()
-          .default(DEFAULTS.maxMembers)
-          .description('Maximum number of teammates in one team.'),
         maxTasks: Schema.natural()
           .min(1)
           .volatile()
           .default(DEFAULTS.maxTasks)
-          .description('Maximum number of tasks the shared task board keeps.'),
-        maxMessageBytes: Schema.natural()
-          .min(1)
+          .description('Maximum number of tasks the shared team board keeps.'),
+        defaultEnabled: Schema.boolean()
           .volatile()
-          .default(DEFAULTS.maxMessageBytes)
-          .description('Maximum size of a single team message, in bytes (131072 = 128 KB).'),
-        disposalTimeoutMs: Schema.natural()
-          .min(1)
-          .volatile()
-          .default(DEFAULTS.disposalTimeoutMs)
-          .description('How long teardown waits for a member before giving up, in milliseconds.'),
-      }).description('Limits applied to the shipped Agent Team row.')
+          .default(DEFAULTS.defaultEnabled)
+          .description('Whether a new session starts with Team collaboration on.'),
+      }).description('Team settings applied to the shipped agent-team row.')
 
 function normalize(config) {
   const source = config ?? {}
-  const result = {}
-  for (const key of Object.keys(DEFAULTS)) {
-    const value = source[key]
-    result[key] =
-      typeof value === 'number' && Number.isFinite(value) && value >= 1
-        ? Math.floor(value)
-        : DEFAULTS[key]
-  }
-  return result
+  const tasks =
+    typeof source.maxTasks === 'number' && Number.isFinite(source.maxTasks) && source.maxTasks >= 1
+      ? Math.floor(source.maxTasks)
+      : DEFAULTS.maxTasks
+  const enabled =
+    typeof source.defaultEnabled === 'boolean' ? source.defaultEnabled : DEFAULTS.defaultEnabled
+  return { maxTasks: tasks, defaultEnabled: enabled }
 }
 
 function entryId(entry) {
@@ -85,9 +81,24 @@ function entryId(entry) {
   return ''
 }
 
+/** True when the row already holds exactly what we would write. */
 function alreadyApplied(override, desired) {
   if (override === null || override === undefined) return false
-  return Object.keys(desired).every((key) => override[key] === desired[key])
+  if (REMOVED.some((key) => Object.hasOwn(override, key))) return false
+  return override.maxTasks === desired.maxTasks && override.defaultEnabled === desired.defaultEnabled
+}
+
+/** The override we want on the row: our two values, and none of the removed keys. */
+function nextOverride(override, desired) {
+  const next = {}
+  for (const [key, value] of Object.entries(override ?? {})) {
+    if (REMOVED.includes(key)) continue
+    if (key === 'maxTasks' || key === 'defaultEnabled') continue
+    next[key] = value
+  }
+  next.maxTasks = desired.maxTasks
+  next.defaultEnabled = desired.defaultEnabled
+  return next
 }
 
 /**
@@ -121,7 +132,7 @@ async function push(ctx, desired) {
       if (alreadyApplied(row.override, desired)) {
         return false
       }
-      await ctx.configEditor.edit(row.entry, () => ({ ...desired }))
+      await ctx.configEditor.edit(row.entry, (current) => nextOverride(current, desired))
       return false
     } catch {
       return true
@@ -138,20 +149,22 @@ function schedule(ctx, desired, attempt) {
   }, delay)
 }
 
-/** Volatile fields arrive as read-only references; ordinary ones as numbers. */
+/** Volatile fields arrive as read-only references; ordinary ones as values. */
 function readValue(value, fallback) {
   if (value !== null && typeof value === 'object' && typeof value.get === 'function') {
     const current = value.get()
-    return typeof current === 'number' ? current : fallback
+    return current === undefined ? fallback : current
   }
-  return typeof value === 'number' ? value : fallback
+  return value === undefined ? fallback : value
 }
 
-/** The limits the page has saved, read from the live Config references. */
+/** The settings the page has saved, read from the live Config references. */
 function currentValues(config) {
-  const raw = {}
-  for (const key of Object.keys(DEFAULTS)) raw[key] = readValue(config === null || config === undefined ? undefined : config[key], DEFAULTS[key])
-  return normalize(raw)
+  const source = config === null || config === undefined ? {} : config
+  return normalize({
+    maxTasks: readValue(source.maxTasks, DEFAULTS.maxTasks),
+    defaultEnabled: readValue(source.defaultEnabled, DEFAULTS.defaultEnabled),
+  })
 }
 
 export function apply(ctx, config) {

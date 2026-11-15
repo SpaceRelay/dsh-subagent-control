@@ -10,56 +10,33 @@ window.__ModuleLoader__.load({
     var NS = 'team-limits'
 
     var DEFAULTS = {
-      maxMembers: 32,
-      maxTasks: 512,
-      maxMessageBytes: 131072,
-      disposalTimeoutMs: 5000,
+      maxTasks: 256,
+      defaultEnabled: false,
     }
 
     var SECTIONS = [
       {
-        id: 'runtime',
-        zh: '运行限制',
-        en: 'Runtime limits',
-        zhNote: '一个团队同时能容纳的成员数与任务板容量。',
-        enNote: 'How many members a team holds and how many tasks its board keeps.',
+        id: 'team',
+        zh: '团队',
+        en: 'Team',
+        zhNote: '任务板能保留多少条任务，以及新会话要不要默认开启团队协作。',
+        enNote: 'How many tasks the board keeps, and whether new sessions start with Team on.',
         fields: [
           {
-            key: 'maxMembers',
-            zh: '团队人数上限',
-            en: 'Maximum team members',
-            zhHelp: '含你（Lead）在内的成员总数上限。',
-            enHelp: 'Members per team, the Lead included.',
-          },
-          {
             key: 'maxTasks',
+            kind: 'number',
             zh: '任务数上限',
             en: 'Maximum tasks',
             zhHelp: '共享任务板上同时保留的任务数。',
             enHelp: 'Tasks the shared board keeps at once.',
           },
-        ],
-      },
-      {
-        id: 'messaging',
-        zh: '消息与清理',
-        en: 'Messages and teardown',
-        zhNote: '单条消息的体积上限，以及成员停止时的等待时间。',
-        enNote: 'Upper bound for one message, and how long teardown waits.',
-        fields: [
           {
-            key: 'maxMessageBytes',
-            zh: '单条消息上限（字节）',
-            en: 'Maximum message size (bytes)',
-            zhHelp: '131072 字节 = 128 KB。',
-            enHelp: '131072 bytes = 128 KB.',
-          },
-          {
-            key: 'disposalTimeoutMs',
-            zh: '清理超时（毫秒）',
-            en: 'Disposal timeout (ms)',
-            zhHelp: '成员停止时最多等待多久再强制结束。',
-            enHelp: 'How long teardown waits before forcing the stop.',
+            key: 'defaultEnabled',
+            kind: 'boolean',
+            zh: '默认开启团队协作',
+            en: 'Teams on by default',
+            zhHelp: '新会话自动启用团队协作。',
+            enHelp: 'New sessions start with Team collaboration on.',
           },
         ],
       },
@@ -76,8 +53,8 @@ window.__ModuleLoader__.load({
     var COPY = {
       title: ['团队限额', 'Team limits'],
       intro: [
-        '设置 Agent Team 的成员数、任务数、消息大小与清理超时。改动会写入 agent-team 行，按正常加载流程生效。',
-        'Team size, task count, message size and teardown timeout for Agent Team. Changes are written onto the agent-team row and applied on the normal load path.',
+        '任务板能保留多少条任务，以及新会话要不要默认开启团队协作。',
+        'How many tasks the board keeps, and whether new sessions start with Team on.',
       ],
       overridden: ['已覆盖', 'Overridden'],
       reset: ['恢复默认', 'Restore default'],
@@ -88,8 +65,8 @@ window.__ModuleLoader__.load({
       ],
       saveFailed: ['保存失败：', 'Save failed: '],
       note: [
-        '数值保存在当前 profile 的补丁层；卸载本插件不会自动撤回。',
-        'Values persist in this profile patch layer; uninstalling the plugin does not roll them back.',
+        '这些设置保存在你本机的 DSH 配置里，不属于这个插件。',
+        'These settings persist in DSH on this machine; they do not belong to this plugin.',
       ],
     }
 
@@ -124,6 +101,9 @@ window.__ModuleLoader__.load({
       '.dtl-foot { font-size: 12px; opacity: .48; line-height: 1.6; margin: 0; max-width: 64ch; }',
       '.dtl-error { font-size: 12.5px; color: #d9534f; }',
       '.dtl-summary { font-size: 13px; opacity: .78; font-variant-numeric: tabular-nums; }',
+      '.dtl-switch { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; cursor: pointer; min-height: 38px; }',
+      '.dtl-switch:has(input:disabled) { opacity: .45; cursor: default; }',
+      '.dtl-switch-input { width: 16px; height: 16px; margin: 0; accent-color: rgba(76,139,245,.95); cursor: inherit; }',
     ].join('\n')
 
     function numberOr(value, fallback) {
@@ -131,13 +111,18 @@ window.__ModuleLoader__.load({
       return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : fallback
     }
 
+    function valueOf(source, field) {
+      var raw = source === null || source === undefined ? undefined : source[field.key]
+      if (field.kind === 'boolean') return typeof raw === 'boolean' ? raw : DEFAULTS[field.key]
+      return numberOr(raw, DEFAULTS[field.key])
+    }
+
     function valuesOf(source) {
       var result = {}
       for (var index = 0; index < SECTIONS.length; index += 1) {
         var fields = SECTIONS[index].fields
         for (var inner = 0; inner < fields.length; inner += 1) {
-          var key = fields[inner].key
-          result[key] = numberOr(source === null || source === undefined ? undefined : source[key], DEFAULTS[key])
+          result[fields[inner].key] = valueOf(source, fields[inner])
         }
       }
       return result
@@ -170,19 +155,39 @@ window.__ModuleLoader__.load({
               )
             : null,
         ),
-        h('input', {
-          id: 'dtl-' + field.key,
-          className: 'dtl-input',
-          type: 'number',
-          min: 1,
-          step: 1,
-          inputMode: 'numeric',
-          disabled: props.disabled,
-          value: String(props.value),
-          onChange: function (event) {
-            props.onInput(field.key, event.target.value)
-          },
-        }),
+        field.kind === 'boolean'
+          ? h(
+              'label',
+              { className: 'dtl-switch' },
+              h('input', {
+                id: 'dtl-' + field.key,
+                className: 'dtl-switch-input',
+                type: 'checkbox',
+                disabled: props.disabled,
+                checked: props.value === true,
+                onChange: function (event) {
+                  props.onToggle(field.key, event.target.checked)
+                },
+              }),
+              h(
+                'span',
+                null,
+                props.value === true ? (isZh() ? '已开启' : 'On') : isZh() ? '已关闭' : 'Off',
+              ),
+            )
+          : h('input', {
+              id: 'dtl-' + field.key,
+              className: 'dtl-input',
+              type: 'number',
+              min: 1,
+              step: 1,
+              inputMode: 'numeric',
+              disabled: props.disabled,
+              value: String(props.value),
+              onChange: function (event) {
+                props.onInput(field.key, event.target.value)
+              },
+            }),
         h('span', { className: 'dtl-help' }, isZh() ? field.zhHelp : field.enHelp),
       )
     }
@@ -287,6 +292,16 @@ window.__ModuleLoader__.load({
         write(key, safe)
       }
 
+      function onToggle(key, checked) {
+        setDraft(function (previous) {
+          var next = {}
+          for (var name in previous) next[name] = previous[name]
+          next[key] = checked
+          return next
+        })
+        write(key, checked)
+      }
+
       function onReset(key) {
         setDraft(function (previous) {
           var next = {}
@@ -302,10 +317,14 @@ window.__ModuleLoader__.load({
           'span',
           { className: 'dtl-summary' },
           [
-            draft.maxMembers + (isZh() ? ' 成员' : ' members'),
             draft.maxTasks + (isZh() ? ' 任务' : ' tasks'),
-            draft.maxMessageBytes + (isZh() ? ' 字节/条' : ' bytes/msg'),
-            draft.disposalTimeoutMs + ' ms',
+            draft.defaultEnabled
+              ? isZh()
+                ? '默认开启'
+                : 'on by default'
+              : isZh()
+                ? '默认关闭'
+                : 'off by default',
           ].join(' · '),
         )
       }
@@ -326,6 +345,7 @@ window.__ModuleLoader__.load({
                 value: draft[field.key],
                 disabled: disabled,
                 onInput: onInput,
+                onToggle: onToggle,
                 onReset: onReset,
               })
             }),

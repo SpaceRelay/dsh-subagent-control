@@ -1,7 +1,7 @@
 {
   "name": "dsh-team-limits",
-  "version": "1.3.8",
-  "description": "Optional companion bundle for the DeepSeek Harness Agent Team limits: members, tasks, message bytes and teardown timeout.",
+  "version": "2.0.0",
+  "description": "Set the Agent Team task limit and whether new sessions start with teams on.",
   "license": "MIT",
   "author": {
     "name": "SpaceRelay",
@@ -48,7 +48,10 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24.0.0",
-    "dsh": ">=0.2.1-rc.1 <0.3.0-0"
+    "dsh": ">=0.2.2-rc.1 <0.3.0-0"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs"
   },
   "dsh": {
     "bundle": {

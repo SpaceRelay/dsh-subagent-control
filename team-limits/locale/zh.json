@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "团队限额",
-    "description": "调整 Agent Team 的人数、任务数、单条消息大小与清理超时。"
+    "description": "调整 Agent Team 的任务数上限，并决定新会话是否默认开启团队协作。"
   }
 }
