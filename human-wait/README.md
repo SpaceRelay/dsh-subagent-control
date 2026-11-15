@@ -41,7 +41,7 @@ Error: code run failed (timeout): execution deadline reached (120000ms)
 - 字段偏离出厂值时会出现「恢复默认」
 - 卡片上有一行摘要
 
-改完约 1.5 秒生效，不用重启。
+改完点「保存」才生效；保存后约 1.5 秒应用到运行中的插件，不用重启。
 
 ## 常见问题
 

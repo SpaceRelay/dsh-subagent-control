@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.4 — 2026-11-16
+
+The settings page saves on an explicit button instead of 700 ms after you stop typing.
+
+- Editing a field only changes a draft; nothing is written until you press **Save**. **Discard**
+  drops the draft and shows the saved values again.
+- The quick buttons (1 hour / 24 hours / unlimited) and **Restore default** also edit the draft
+  only, so a half-finished edit cannot reach the running plugin.
+- The card summary now reports the saved values, not the draft.
+
 ## 0.2.3 — 2026-11-15
 
 Documentation only, no behaviour change.

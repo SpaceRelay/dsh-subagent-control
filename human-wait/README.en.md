@@ -41,7 +41,7 @@ and the question card is reported as **interrupted**. With this plugin, the time
 - **Restore default** appears once the field differs from the shipped value
 - A one-line summary sits on the card
 
-A change takes effect in about 1.5 seconds, no restart.
+Press **Save** to apply an edit; it reaches the running plugin in about 1.5 seconds, no restart.
 
 ## FAQ
 

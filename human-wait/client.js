@@ -43,6 +43,10 @@ window.__ModuleLoader__.load({
         'This connection cannot write settings, so this page is read-only.',
       ],
       saveFailed: ['保存失败：', 'Save failed: '],
+      save: ['保存', 'Save'],
+      saving: ['保存中…', 'Saving…'],
+      discard: ['放弃更改', 'Discard'],
+      saved: ['已保存', 'Saved'],
       note: [
         '数值保存在当前 profile 的补丁层；卸载本插件不会自动撤回。',
         'Values persist in this profile patch layer; uninstalling the plugin does not roll them back.',
@@ -78,6 +82,13 @@ window.__ModuleLoader__.load({
       '.dhw-foot { font-size: 12px; opacity: .48; line-height: 1.6; margin: 0; max-width: 64ch; }',
       '.dhw-error { font-size: 12.5px; color: #d9534f; }',
       '.dhw-summary { font-size: 13px; opacity: .78; font-variant-numeric: tabular-nums; }',
+      '.dhw-actions { display: flex; align-items: center; gap: 10px; }',
+      '.dhw-save { font-size: 12.5px; padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(76,139,245,.85); background: rgba(76,139,245,.16); color: inherit; cursor: pointer; }',
+      '.dhw-save:hover:not(:disabled) { background: rgba(76,139,245,.26); }',
+      '.dhw-save:disabled { opacity: .4; cursor: default; }',
+      '.dhw-cancel { font-size: 12.5px; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(128,128,128,.36); background: transparent; color: inherit; cursor: pointer; }',
+      '.dhw-cancel:disabled { opacity: .4; cursor: default; }',
+      '.dhw-notice { font-size: 12.5px; opacity: .7; }',
     ].join('\n')
 
     /** Unwrap a volatile ref if the host handed one through. */
@@ -136,9 +147,15 @@ window.__ModuleLoader__.load({
       var error = errorPair[0]
       var setError = errorPair[1]
 
-      var pendingPair = React.useState({})
-      var pending = pendingPair[0]
-      var setPending = pendingPair[1]
+      var savingPair = React.useState(false)
+      var saving = savingPair[0]
+      var setSaving = savingPair[1]
+
+      var noticePair = React.useState('')
+      var notice = noticePair[0]
+      var setNotice = noticePair[1]
+
+      var dirtyRef = { current: false }
 
       React.useEffect(function () {
         var off = form.subscribe(function () {
@@ -148,101 +165,83 @@ window.__ModuleLoader__.load({
         return off
       }, [form])
 
-      React.useEffect(function () {
-        var next = valuesOf(snapshot.value)
-        var keys = Object.keys(pending)
-        setDraft(function (previous) {
-          var merged = {}
-          for (var name in previous) merged[name] = previous[name]
-          for (var name in next) {
-            if (keys.indexOf(name) < 0) merged[name] = next[name]
-          }
-          return merged
-        })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [snapshot.value])
+      var saved = valuesOf(snapshot.value)
+      var dirtyKeys = Object.keys(draft).filter(function (name) {
+        return draft[name] !== saved[name]
+      })
+      var dirty = dirtyKeys.length > 0
+      dirtyRef.current = dirty
 
       React.useEffect(function () {
-        var keys = Object.keys(pending)
-        if (keys.length === 0) return undefined
-        var timer = setTimeout(function () {
-          var chain = Promise.resolve()
-          keys.forEach(function (key) {
-            chain = chain.then(function () {
-              return form.set(key, pending[key])
-            })
-          })
-          chain
-            .then(function () {
-              setPending({})
-            })
-            .catch(function (caught) {
-              setPending({})
-              setError(t('saveFailed') + String((caught && caught.message) || caught))
-            })
-        }, 700)
-        return function () {
-          clearTimeout(timer)
-        }
-      }, [pending, form])
+        // Adopt values written elsewhere only while the user has no unsaved edit.
+        if (dirtyRef.current) return
+        setDraft(valuesOf(snapshot.value))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [snapshot.value])
 
       var ready = snapshot.status === 'ready'
       var disabled = !ready
 
-      function write(key, value) {
+      function setDraftField(key, value) {
         setError('')
-        setPending(function (previous) {
-          var next = {}
-          for (var name in previous) next[name] = previous[name]
-          next[key] = value
-          return next
+        setNotice('')
+        setDraft(function (previous) {
+          var merged = {}
+          for (var name in previous) merged[name] = previous[name]
+          merged[key] = value
+          return merged
         })
       }
 
       function onCapInput(raw) {
         if (raw === '' || raw === '-') {
-          setDraft(function (previous) {
-            var merged = {}
-            for (var name in previous) merged[name] = previous[name]
-            merged.humanWaitCapMs = raw === '-' ? -1 : DEFAULTS.humanWaitCapMs
-            return merged
-          })
+          setDraftField('humanWaitCapMs', raw === '-' ? -1 : DEFAULTS.humanWaitCapMs)
           return
         }
         var parsed = Number(raw)
         if (!Number.isFinite(parsed)) return
         var safe = parsed === -1 ? -1 : Math.max(1, Math.floor(parsed))
-        setDraft(function (previous) {
-          var merged = {}
-          for (var name in previous) merged[name] = previous[name]
-          merged.humanWaitCapMs = safe
-          return merged
-        })
-        write('humanWaitCapMs', safe)
+        setDraftField('humanWaitCapMs', safe)
       }
 
       function onQuick(value) {
-        setDraft(function (previous) {
-          var merged = {}
-          for (var name in previous) merged[name] = previous[name]
-          merged.humanWaitCapMs = value
-          return merged
-        })
-        write('humanWaitCapMs', value)
+        setDraftField('humanWaitCapMs', value)
       }
 
       function onReset(key) {
-        setDraft(function (previous) {
-          var merged = {}
-          for (var name in previous) merged[name] = previous[name]
-          merged[key] = DEFAULTS[key]
-          return merged
+        setDraftField(key, DEFAULTS[key])
+      }
+
+      function onDiscard() {
+        setError('')
+        setNotice('')
+        setDraft(valuesOf(snapshot.value))
+      }
+
+      function onSave() {
+        if (!dirty || saving) return
+        setError('')
+        setNotice('')
+        setSaving(true)
+        var chain = Promise.resolve()
+        Object.keys(draft).forEach(function (key) {
+          chain = chain.then(function () {
+            return form.set(key, draft[key])
+          })
         })
-        write(key, DEFAULTS[key])
+        chain
+          .then(function () {
+            setSaving(false)
+            setNotice(t('saved'))
+          })
+          .catch(function (caught) {
+            setSaving(false)
+            setError(t('saveFailed') + String((caught && caught.message) || caught))
+          })
       }
 
       if (summary) {
-        return h('span', { className: 'dhw-summary' }, formatCap(draft.humanWaitCapMs))
+        return h('span', { className: 'dhw-summary' }, formatCap(saved.humanWaitCapMs))
       }
 
       var capOverridden = draft.humanWaitCapMs !== DEFAULTS.humanWaitCapMs
@@ -317,6 +316,28 @@ window.__ModuleLoader__.load({
         h('style', null, CSS),
         ready ? null : h('p', { className: 'dhw-foot' }, t(snapshot.status === 'unavailable' ? 'unavailable' : 'loading')),
         capGroup,
+        dirty || saving
+          ? h(
+              'div',
+              { className: 'dhw-actions' },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'dhw-save',
+                  disabled: disabled || saving,
+                  onClick: onSave,
+                },
+                saving ? t('saving') : t('save'),
+              ),
+              h(
+                'button',
+                { type: 'button', className: 'dhw-cancel', disabled: saving, onClick: onDiscard },
+                t('discard'),
+              ),
+            )
+          : null,
+        notice ? h('span', { className: 'dhw-notice' }, notice) : null,
         error ? h('p', { className: 'dhw-error' }, error) : null,
         h('p', { className: 'dhw-foot' }, t('note')),
       )
