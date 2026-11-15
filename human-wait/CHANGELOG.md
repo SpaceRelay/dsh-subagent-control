@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2 — 2026-11-15
+
+- Rewrote the README for users: when the plugin helps, what it does and does not change (a table
+  with the four cases), how to install and where the setting lives. The Chinese README is now
+  primary and `README.en.md` is the English translation.
+- Moved the implementation notes, the acceptance record and the tests to `docs/implementation.md`
+  and `docs/implementation.en.md`.
+
 ## 0.2.1 — 2026-10-27
 
 - Adds a browser half (`client.js`), so the plugin gets its own settings page under **Plugins**:

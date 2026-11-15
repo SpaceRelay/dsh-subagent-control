@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.7
+
+- Rewrote the README for users: what the four numbers do, how to reach the page, and the two things
+  that surprise people (values survive uninstall; higher limits mean more concurrent sessions).
+  `README.en.md` is the English translation.
+- Moved the implementation notes, the settings-page structure and the security notes to
+  `docs/implementation.md` and `docs/implementation.en.md`.
+
 ## 1.3.6
 
 - Declares `engines` (`node` and `dsh`). The package declared neither, so the installer could not

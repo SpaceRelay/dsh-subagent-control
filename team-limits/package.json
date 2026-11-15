@@ -1,6 +1,6 @@
 {
   "name": "dsh-team-limits",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "description": "Optional companion bundle for the DeepSeek Harness Agent Team limits: members, tasks, message bytes and teardown timeout.",
   "license": "MIT",
   "author": {
@@ -33,6 +33,8 @@
     "locale/*.json",
     "icon.svg",
     "README.md",
+    "README.en.md",
+    "docs",
     "LICENSE",
     "CHANGELOG.md"
   ],

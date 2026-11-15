@@ -1,184 +1,69 @@
 # dsh-human-wait
 
-**Stops the PTC `run_code` deadline while DSH is waiting for you.** In PTC mode a question
-(`ask_user_question`), the plan review raised by `exit_plan_mode`, or a sandbox approval is a
-nested call inside the one `run_code` program — and `dsh-ptc-runtime-node` measures a single
-wall-clock budget across the whole program, *including the time you spend answering*. Wait
-longer than what is left of that budget and the run dies with:
+**PTC 模式下，DSH 在等你回答问题时，不再让执行超时继续倒数。**
+
+PTC（`run_code`）把整个程序——包括中途弹出的问题、计划审批、权限批准——包在一条 120 秒的墙钟预算里。你想久一点再回答，程序就已经超时了：
 
 ```
 Error: code run failed (timeout): execution deadline reached (120000ms)
 ```
 
-and the question card is reported as **已中断 / interrupted**. This plugin keeps the deadline
-for execution but pauses it while a human-interaction wait is pending. A runaway program is
-still cut off after its budget; a question you think about for an hour is not.
+问题卡还会被标成「已中断」。装上这个插件，等待你回答的那段时间不再计入预算；程序自己跑飞了，照样在预算到点时被掐断。
 
-> 中文摘要：PTC 模式下提问、计划审批和批准都是 `run_code` 里的嵌套调用，共用同一条 120 秒墙钟预算，
-> 所以「想久一点再回答」会让你看到的是一次 `execution deadline reached (120000ms)` 超时。本插件
-> 保留执行的截止时间，但在**等待你回答/批准期间暂停计时**；等待本身另有上限（默认 24 小时，可设为无限）。
+> [English](README.en.md) | 中文
 
----
+## 什么时候用得上
 
-## What it does
+- 用 PTC 模式跑程序，中途要你回答问题或审批，而你想读完再答
+- 遇到过「问题卡突然变成已中断」或者上面那条超时
 
-| Situation | Without the plugin | With the plugin |
+## 它改什么、不改什么
+
+| 情况 | 没装 | 装了 |
 | --- | --- | --- |
-| A question inside `run_code`, you answer in 20 s, run budget was 120 s | OK | OK |
-| Same run, you answer after 4 minutes | run aborted at 120 s, question interrupted | run keeps waiting; the answer is delivered |
-| Same run, you never answer | run aborted at 120 s | run aborted once the wait exceeds `humanWaitCapMs` (24 h) |
-| A program that spins for 10 minutes without asking anything | aborted at 120 s | aborted at 120 s — unchanged |
+| 程序里提问，20 秒答完 | 正常 | 正常 |
+| 同一个程序，4 分钟后才答 | 120 秒就被中止，问题卡显示已中断 | 继续等，答案照常送达 |
+| 一直不答 | 120 秒中止 | 等到最长等待上限（默认 24 小时）才中止 |
+| 程序自己死循环 10 分钟 | 120 秒中止 | 120 秒中止，行为不变 |
 
-It works by:
+## 安装
 
-1. wrapping `ptcRuntime.run` and moving the deadline into the plugin, so it can be paused;
-2. wrapping `userQuestions.ask` / `userQuestions.askTimed` and `approval.request` — the three
-   service calls that exist only because a human is being waited on;
-3. charging the budget only while no such wait is pending (`node:async_hooks`
-   `AsyncLocalStorage` keeps the accounting scoped to the run that is actually waiting).
+1. 打开 设置 → 插件 → 市场，搜索 `dsh-human-wait`
+2. 点安装
+3. **完全退出 DSH，再重新打开**
 
-A single `run_code` call can still pass its own `timeoutMs`; that number keeps working as the
-execution budget and is what the plugin enforces.
+## 设置
 
-## Install
+设置 → 插件 → 已安装 → **人机等待**：
 
-The plugin is a normal DSH bundle: one inserted host row, plus a browser half that renders the
-settings page under **Plugins**. Pick one route:
+- **最长等待**（默认 24 小时；选「无限」表示不设上限）
+- 快捷按钮：1 小时 / 24 小时 / 无限
+- 字段偏离出厂值时会出现「恢复默认」
+- 卡片上有一行摘要
 
-**A. From the registry (recommended).** Use the Plugins settings page, or a
-`plugin_manager install_bundle` call in a session, with the spec `dsh-human-wait@0.2.1`; the
-plugin manager adds both the dependency and the bundle entry for you.
+改完约 1.5 秒生效，不用重启。
 
-**B. From a tarball, by hand.** In `<DSH_HOME>/profiles/<profile>/package.json` add the dependency
-and the bundle name, then install it:
+## 常见问题
 
-```jsonc
-{
-  "dependencies": {
-    "dsh-human-wait": "file:D:/path/to/dsh-human-wait-0.2.1.tgz"
-  },
-  "dsh": { "profile": { "bundles": ["dsh-human-wait"] } }
-}
-```
+**还是超时了？** 确认三件事：会话头部显示 PTC 标记；插件的 `enabled` 没在 profile 补丁里被关掉；日志里有 `[dsh-human-wait]` 开头的那行说明。如果等待期间恰好插件没看到这次等待，它就不会暂停计时。
 
-```powershell
-# pnpm ships with the desktop runtime
-& "$env:USERPROFILE\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\pnpm\pnpm.cjs" install --dir "$env:USERPROFILE\.dsh\profiles\desktop"
-```
+**错误类型变成 `abort` 了？** 正常。插件用自己的信号中止程序，所以 kind 从 `timeout` 变成 `abort`，提示文字里仍然有 `execution deadline reached`。
 
-Then **quit DSH from the tray icon and start it again** — bundles are composed at boot. The
-Electron-managed profile cannot be booted through the `dsh` CLI (`profile "desktop" is managed
-exclusively by the Electron application`), so restarting the app is the only way to apply it.
-Removing the bundle name from `dsh.profile.bundles` and deleting the dependency disables the
-plugin again; the wrappers are also restored at unload time.
+**普通会话受影响吗？** 不受影响。普通会话本来就会一直等你回答，没有这个超时。
 
-## Configuration
+## 隐私与开销
 
-The row ships sensible defaults; override them in the same profile's `cordis.patch.yml` when
-you want something else:
+- 只在内存里包住三个宿主服务的调用，不写文件、不联网
+- 不修改会话内容，也不改变程序本身的执行预算
 
-```yaml
-- id: human-wait
-  name: 'dsh-human-wait'
-  config:
-    enabled: true
-    humanWaitCapMs: 86400000   # 24 h; -1 = no cap at all
-```
+## 卸载
 
-| Option | Default | Meaning |
-| --- | --- | --- |
-| `enabled` | `true` | Turn the pause on/off. `false` reproduces the shipped behaviour exactly. |
-| `humanWaitCapMs` | `86400000` | Longest time one run may spend waiting for a human. `-1` removes the cap. |
+在插件面板里停用或卸载，然后重启 DSH；宿主原来的方法会恢复。
 
-How the clock works: the plugin re-arms a single timer on every accounting event (run start, a
-wait starting or ending, or the timer itself firing), so there is no fixed sampling period and
-no configuration knob for one.
+## 技术细节
 
-Both options are **volatile**: they are read again while the plugin is running, so a change
-takes effect within about a second and a half, with no restart. Editing the
-patch by hand is still read at boot.
+实现原理、两个配置项、失败时的降级行为与验收记录：[docs/implementation.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/human-wait/docs/implementation.md)
 
-## Settings page
+## 许可
 
-The plugin ships a browser half, so it gets its own card on its page under **Plugins** (the same
-place as Team limits):
-
-- a number field for `humanWaitCapMs`, with quick buttons for 1 hour / 24 hours / unlimited;
-- an "overridden" chip and a "restore default" action for that field;
-- a one-line summary on the card itself.
-
-`enabled` stays in the patch layer (`cordis.patch.yml`), where it is read live within about a
-second and a half.
-
-The values are written back to this profile's patch layer through the normal settings path;
-uninstalling the plugin does not roll them back.
-
-## What counts as a human wait
-
-- `userQuestions.ask` — blocking questions, including the `plan-review` question from
-  `exit_plan_mode`;
-- `userQuestions.askTimed` — timed questions;
-- `approval.request` — sandbox/policy approvals that block on the user.
-
-Tool calls that finish on their own (bash, file reads, web fetches, subagents) are **not**
-waits: their time is still charged to the run, exactly as before.
-
-## Behaviour notes
-
-- **Fail-open.** If `ptcRuntime` / `userQuestions` / `approval` are missing, if
-  `AbortSignal.any` is unavailable, or if a wrapper cannot be installed, the plugin logs one
-  warning and leaves the shipped deadline untouched.
-- **Restored on unload.** Every wrapper is removed when the plugin unloads (or is disabled and
-  the profile restarted); the original methods are back.
-- **The terminal error changes kind.** When the paused execution budget runs out, the runtime
-  reports `kind: "abort"` instead of `kind: "timeout"`, because the plugin aborts the run
-  through its signal. The message still contains `execution deadline reached (<budget>ms)`, so
-  the surfaced text is the same.
-- **Only PTC sessions are affected.** Standard sessions never had this timeout: their
-  questions wait indefinitely by design.
-- **Not a public extension point.** The plugin patches methods of two host services
-  (`ptcRuntime`, `userQuestions`) and one approval service. That is the only way to implement
-  this today; a future DSH release may change those internals and make the patch a no-op. The
-  plugin is written so that this failure mode is safe, not fatal.
-
-Verified against DSH desktop **0.2.1-rc.3** (`dsh-ptc-runtime-node` 0.2.1, node 24.21).
-`ptc-runtime-node/lib/index.js` is where the shipped timer lives:
-
-```js
-const wallTimer = spec.timeoutMs === null ? void 0 : setTimeout(() => {
-  timedOut = true;
-  controller.abort("execution deadline reached");
-}, spec.timeoutMs);
-```
-
-## Troubleshooting
-
-- Look for `[dsh-human-wait]` lines in the DSH log; the plugin logs either
-  `PTC run deadlines now pause while a human is waiting (wait cap: …)` or the reason it stayed
-  out of the way.
-- If a wait still dies with `execution deadline reached`, the wrapper did not see the wait.
-  Check that PTC mode is actually in use (the session header shows the `PTC` badge) and that
-  `enabled` is not `false`.
-
-## Development
-
-```powershell
-npm test        # node --test, no dependencies
-```
-
-## License
-
-MIT
-
-## Acceptance record
-
-Recorded 2026-10-26 against `dsh-human-wait` 0.1.0 in the desktop profile (PTC mode, shipped 120 s budget):
-
-| Test | Scenario | Observed |
-| --- | --- | --- |
-| A | nested `ask_user_question`, answered after 294037 ms | answer delivered, run continued, no `execution deadline reached` |
-| B | plan review submitted through `exit_plan_mode`, approved after 313073 ms | plan approved, run continued, no automatic cancellation at 120 s |
-| C | `run_code` running `while (true) {}` | killed after ~120 s with `Error: code run failed (abort): execution deadline reached (120000ms)` |
-
-Test C's `(abort)` label is expected — the plugin aborts through its own signal, so the runtime classifies the failure as `abort` instead of `timeout` while the message text stays `execution deadline reached (120000ms)`.
-
+MIT，见 [LICENSE](./LICENSE)。问题反馈：[github.com/SpaceRelay/dsh-subagent-control/issues](https://github.com/SpaceRelay/dsh-subagent-control/issues)

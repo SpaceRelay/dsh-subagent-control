@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.7
+
+- Rewrote the README for users instead of maintainers: what the three tools are for, how to install
+  from the market, when to use each optional component, FAQ, privacy and uninstall. The Chinese
+  README is now the primary one and `README.en.md` is the English translation.
+- The install example no longer pins a version, so it cannot go stale.
+- Implementation notes, the boundary with the built-in tools and the test coverage moved to
+  `docs/implementation.md` and `docs/implementation.en.md`.
+
 ## 1.0.6
 
 - Declares the harness versions this bundle supports: `engines.dsh` is now
