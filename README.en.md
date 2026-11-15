@@ -21,24 +21,16 @@
 | `send_subagent_message` | Send one more message to a direct child | `subagent_id`, `message` |
 | `interrupt_subagent` | Stop a subagent's current turn | `subagent_id` |
 
-It looks like this:
+Once it is installed, one `list_subagents` call returns a line per subagent:
 
 ```
-list_subagents
-→ 3b0f9c1e  running  "review the patch"  depth=1
-
-list_subagents scope=descendants
-→ 3b0f9c1e  running  "review the patch"  depth=1
-  7d2a44b0  inactive "check the tests"    depth=2
-
-send_subagent_message subagent_id=3b0f9c1e message="also look at locale/zh.json"
-→ messageId=...
-
-interrupt_subagent subagent_id=3b0f9c1e
-→ accepted=true
+3b0f9c1e  running   "review the patch"  depth=1
+7d2a44b0  inactive  "check the tests"   depth=2
 ```
 
-Each line is `id  status  "label"  depth=`. `running` means a turn is executing; `inactive` only means no turn is running right now — **the subagent is still there**, and a message wakes it.
+Left to right: the id, the current status, the task in quotes, and the depth. `depth=1` is one you started, `depth=2` is one it started. `running` means a turn is executing; `inactive` only means no turn is running at this moment, not that the subagent is gone, and a message wakes it.
+
+Messaging and stopping are simpler still: `send_subagent_message` takes an id and one sentence, `interrupt_subagent` takes just the id, and they return a message id and whether the request was accepted.
 
 Team members are continuable subagents too, so they show up in the list marked `team=teammate`. Pass `include_teammates: false` when you only want the plain subagents you started.
 
@@ -67,7 +59,7 @@ Turn them on one by one under **Settings → Plugins → Installed → `dsh-suba
 - [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) — keep PTC mode from burning its budget while you answer
 - [dsh-find-session](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session) — find text in the conversation or across every session
 
-All three install separately: they override a shipped row or another plugin's behaviour, and that should never happen implicitly.
+These three are separate packages, each installed on its own. Each one changes something DSH ships with or another plugin's behaviour, and that is your call to make, so none of them come bundled here.
 
 ## FAQ
 

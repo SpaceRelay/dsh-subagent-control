@@ -21,24 +21,16 @@
 | `send_subagent_message` | 给一个直接子代理补一句话 | `subagent_id`、`message` |
 | `interrupt_subagent` | 叫停某个子代理当前这一轮 | `subagent_id` |
 
-长这样：
+装好之后，智能体调一次 `list_subagents`，拿到的是每个子代理一行：
 
 ```
-list_subagents
-→ 3b0f9c1e  running  "review the patch"  depth=1
-
-list_subagents scope=descendants
-→ 3b0f9c1e  running  "review the patch"  depth=1
-  7d2a44b0  inactive "check the tests"    depth=2
-
-send_subagent_message subagent_id=3b0f9c1e message="顺手看一下 locale/zh.json"
-→ messageId=...
-
-interrupt_subagent subagent_id=3b0f9c1e
-→ accepted=true
+3b0f9c1e  running   "review the patch"  depth=1
+7d2a44b0  inactive  "check the tests"   depth=2
 ```
 
-每行是 `id  状态  "标签"  depth=`。`running` 表示正在跑；`inactive` 只表示当前没有回合在执行——**不是子代理没了**，发条消息就能唤醒。
+从左往右是：id、当前状态、引号里它正在做的任务、深度。`depth=1` 是你直接派出去的，`depth=2` 是它再派出去的。`running` 表示正在跑；`inactive` 只表示这一刻没有回合在执行，不是子代理没了，发条消息就能唤醒。
+
+补话和打断更简单：`send_subagent_message` 给一个 id 和一句话，`interrupt_subagent` 只给一个 id，分别返回一条消息 id 和这次请求是否被接受。
 
 团队里的队友本身也是可续子代理，所以也会出现在列表里，标着 `team=teammate`。只想要自己派的普通子代理，传 `include_teammates: false`。
 
@@ -67,7 +59,7 @@ interrupt_subagent subagent_id=3b0f9c1e
 - [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) —— PTC 模式下等你回答问题时不烧掉执行预算
 - [dsh-find-session](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session) —— 会话内 / 跨会话关键词查找
 
-三个都是单独安装的：它们改的是宿主自带的行或别的插件的行为，不该跟着这个包一起悄悄生效。
+这三个是各自独立的包，要单独安装。它们改的是 DSH 自带的东西或别的插件的行为，装不装由你决定，所以不会跟着这个包一起装上。
 
 ## 常见问题
 
