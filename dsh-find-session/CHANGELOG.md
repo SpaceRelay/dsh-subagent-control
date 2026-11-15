@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3 — 2026-11-15
+
+Documentation only, no behaviour change.
+
+- The README now speaks to the people who run the plugin rather than the people
+  who maintain it: install from the market, the shortcuts, the settings page,
+  the "installed it and nothing happened" case, privacy, and uninstall.
+- Implementation notes, `cordis.patch.yml` overrides, development commands and
+  the acceptance record moved to `docs/implementation.md`
+  (English: `docs/implementation.en.md`).
+
 ## 0.1.2 — 2026-11-15
 
 The shortcut commands now declare the two fields the host reads unconditionally,
