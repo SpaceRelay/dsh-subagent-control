@@ -1,6 +1,6 @@
 # dsh-human-wait
 
-**While DSH is waiting for you — a question, a plan review, an approval — the execution deadline pauses; thinking longer no longer ends the run.**
+**PTC mode only: while DSH is waiting for you — a question, a plan review, an approval — the 120-second deadline pauses, so thinking longer no longer ends the run.**
 
 PTC mode (the agent writes a short program with `run_code` and runs it as the task) puts one 120-second deadline around the whole program, and the questions, plan reviews and approvals raised in the middle count against it. Think for three minutes and you come back to:
 
