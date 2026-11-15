@@ -74,4 +74,7 @@ jobs:
           echo "Publishing dsh-team-limits $PKG_VERSION"
 
       - name: Publish with provenance
-        run: npm publish --provenance --access public
+        # This branch publishes the 0.2.1-era line (1.3.x). `latest` belongs to
+        # the 2.x line, and npm refuses to move `latest` to a lower version, so
+        # the legacy fix is published under its own dist-tag.
+        run: npm publish --provenance --access public --tag legacy
