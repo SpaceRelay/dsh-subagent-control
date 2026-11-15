@@ -1,14 +1,14 @@
 # dsh-human-wait
 
-**Stops the PTC `run_code` deadline while DSH is waiting for you.**
+**While DSH is waiting for you — a question, a plan review, an approval — the execution deadline pauses; thinking longer no longer ends the run.**
 
-PTC mode wraps the whole program — including any question, plan review or approval raised mid-run — in one 120-second wall clock. Think a little too long and the run is already gone:
+PTC mode (the agent writes a short program with `run_code` and runs it as the task) puts one 120-second deadline around the whole program, and the questions, plan reviews and approvals raised in the middle count against it. Think for three minutes and you come back to:
 
 ```
 Error: code run failed (timeout): execution deadline reached (120000ms)
 ```
 
-and the question card is reported as **interrupted**. With this plugin, the time you spend answering is no longer charged to that budget; a runaway program is still cut off when the budget runs out.
+and the question card is reported as **interrupted**. With this plugin, the time you spend replying no longer counts against that deadline, and it waits for you up to the cap you set (24 hours by default); a runaway program is still cut off at the mark.
 
 > English | [中文](README.md)
 
