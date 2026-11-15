@@ -16,6 +16,12 @@
 2. Install it
 3. **Quit DSH completely, then start it again**
 
+> On DSH 0.2.1 — the release where the team feature was still an "experimental plugin" — install
+> `dsh-team-limits@1.3.9` instead. 2.x is written for the 0.2.2 settings: 0.2.2 turned the team
+> feature into a regular plugin and dropped the member count, message size and teardown timeout,
+> leaving only the task count and a default switch. So 2.x is refused on 0.2.1, and 1.3.9 does not
+> apply on 0.2.2 or later.
+
 Requires DSH 0.2.2 or newer.
 
 ## Where to change it

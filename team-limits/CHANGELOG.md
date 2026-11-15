@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1
+
+Documentation only: the README now says which line to install on which DSH release. 2.x targets
+0.2.2 and later; DSH 0.2.1 users need `dsh-team-limits@1.3.9`, because 0.2.2 dropped the member,
+message-size and teardown settings this bundle used to expose.
+
 ## 2.1.0
 
 The settings page no longer writes while you type. Fields now hold a local draft; **Save** writes
