@@ -6,6 +6,8 @@
 
 > English | [中文](README.md)
 
+In DSH an agent can hand part of the work to another agent; the one that takes it is called a subagent. This plugin lets the agent that handed the work out see those subagents, send them another line, and stop them.
+
 ## When you need it
 
 - You started a few subagents to work in parallel and want to know who is still running
@@ -59,7 +61,7 @@ Turn them on one by one under **Settings → Plugins → Installed → `dsh-suba
 - [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) — keep PTC mode from burning its budget while you answer
 - [dsh-find-session](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session) — find text in the conversation or across every session
 
-These three are separate packages, each installed on its own. Each one changes something DSH ships with or another plugin's behaviour, and that is your call to make, so none of them come bundled here.
+They each do one thing, so they are three separate packages: install the one you want. None of them come with this package.
 
 ## FAQ
 
