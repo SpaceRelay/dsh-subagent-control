@@ -1,38 +1,72 @@
 # dsh-find-session
 
-Press `Ctrl+F` to find any line in a conversation, or search every session at once.
+**Press `Ctrl+F` to find any line in the conversation, or search every session at once.**
 
-DSH loads a conversation in pages, so the browser's own find only sees the part already rendered; earlier turns are invisible to it. This plugin puts search inside the conversation: hits are highlighted and you can step between them, or switch to All sessions and search everything at once.
+DSH loads a conversation in pages, so the browser's own find only sees what is already rendered — earlier turns are invisible to it. This plugin brings search into the conversation: hits are highlighted and you can step between them, or switch to **All sessions** and search your whole history.
 
-Installing takes a full quit and relaunch of DSH; plugins are composed at boot, so reloading the window will not do it. You can also install it from npm by the package name `dsh-find-session` in the plugin manager.
+> English | [中文](README.md)
 
-How to use it:
+## When you need it
+
+- A long conversation, and you want to know "which step was it where we settled that plan"
+- You remember discussing an error but not which session — search everything once
+- You only want your own questions, without drowning in tool output
+
+## Install
+
+1. Open **Settings → Plugins → Market** and search for `dsh-find-session`
+2. Install it
+3. **Quit DSH completely, then start it again**
+
+The last step is not optional: plugins are composed at boot, so reloading the page does nothing.
+
+You can also install it from npm by the package name `dsh-find-session` (the plugin manager's "install from npm").
+
+## Usage
 
 | What you want | How |
 | --- | --- |
 | Find in the current conversation | `Ctrl+F`, type, highlighting follows; `Enter` next, `Shift+Enter` previous |
-| Find in every session | `Ctrl+Shift+F`, or the Find icon in the left rail, then switch to All sessions |
+| Find in every session | `Ctrl+Shift+F`, or the **Find** icon in the left rail, then switch to **All sessions** |
 | Check a hit before jumping | Click it to expand the preview (two events either side), then decide |
-| Jump there | Click Open to switch to that session and locate the turn |
-| Read the conversation while browsing results | Dock to sidebar, top right of the Find page |
+| Jump | Click **Open** — switches to that session and locates the turn |
+| Read the conversation while browsing results | **Dock to sidebar** in the top-right of the Find page |
 | Close the find bar | `Esc` |
 
-Shortcuts are editable under Settings → Shortcuts.
+Shortcuts are editable under **Settings → Shortcuts**.
 
-Settings → Find has three options: default match mode (substring / whole word / regex), default content range (body, tool calls and reasoning as three independent switches; body only by default), and the per-search result limit.
+## Settings
 
-Installed it and nothing changed? DSH was not fully quit. Quit from the tray and start it again; reloading the window is not enough.
+**Settings → Find**:
 
-Only part of the current conversation is found? In-conversation search highlights what is rendered. Jumping to an older hit loads history first, but how much loads at once is up to DSH.
+- **Default match mode**: substring / whole word / regex
+- **Content scope**: body, tool calls and reasoning as three independent switches (body only by default)
+- **Result limit**
 
-The all-sessions results were truncated? One scan has a budget (30000 text blocks by default). Narrow the time range or the workspace and it will search more.
+## FAQ
 
-Can it find two Chinese characters? Yes. It does not tokenise; it matches substrings character by character, so `会话` finds "我们来做会话上下文关键词查找".
+**Installed it and nothing changed?** DSH was not fully quit. Quit from the tray and start it again; reloading the page is not enough.
 
-It only reads local session logs: no network, nothing uploaded, and it does not modify sessions or your profile. A global scan reads at most 30000 text blocks by default and tells you to narrow the query when it hits the budget; results are cached, so the same query is not rescanned.
+**Only part of the current conversation is found?** In-session find highlights only what is rendered. Jumping to an earlier hit makes the plugin load history first, but how much one call pulls is up to DSH.
 
-Uninstall: Settings → Plugins → Installed → `dsh-find-session` → disable or remove, then restart DSH.
+**Global results are truncated?** One scan has a budget (30k text chunks by default). Narrow the time range or workspace and it will cover everything.
 
-The implementation, the `cordis.patch.yml` overrides, tests and the acceptance record are in [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/dsh-find-session/docs/implementation.en.md).
+**Can I search two Chinese characters?** Yes. The plugin does not tokenize — it matches by character, so `会话` finds `我们来做会话上下文关键词查找`.
 
-MIT.
+## Privacy and cost
+
+- Reads local session logs only; no network, nothing uploaded
+- Never modifies a session, the profile, or the settings document
+- A global scan reads at most 30k text chunks by default and tells you when results are truncated; results are cached, so repeating a query does not rescan
+
+## Uninstall
+
+**Settings → Plugins → Installed → `dsh-find-session`** → disable or uninstall, then restart DSH.
+
+## Technical notes
+
+Implementation, `cordis.patch.yml` overrides, tests and the acceptance record: [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/dsh-find-session/docs/implementation.en.md)
+
+## License
+
+MIT
