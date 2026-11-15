@@ -1,57 +1,38 @@
 # dsh-team-limits
 
-**Adjust Agent Team's member count, task count, message size and teardown timeout from the plugin page.**
+The four Agent Team limits, as numbers you can type.
 
-> English | [中文](README.md)
+16 team members by default, tasks queue up once there are many, and long messages coming back from subagents get truncated. Adjusting any of it used to mean finding the right line in a config file. Now the four numbers sit on a plugin page and apply as you type.
 
-## When you need it
+Installing it takes a full quit and relaunch of DSH. The plugin carries a settings page, and those are composed at boot, so refreshing the window will not show it.
 
-- 16 team members by default, and that is not enough
-- Tasks start queueing (256 by default)
-- Long messages from subagents get truncated (64 KB by default)
-- You want the shipped values back without digging through config files
-
-## Install
-
-1. Open **Settings → Plugins → Market** and search for `dsh-team-limits`
-2. Install it
-3. **Quit DSH completely, then start it again**
-
-## Where to change it
-
-**Settings → Plugins → Installed → Team limits** — four number fields:
+Afterwards, Settings → Plugins → Installed → Team limits has four fields:
 
 | Setting | Shipped default | This page starts at |
 | --- | --- | --- |
-| Members | 16 | **32** |
-| Tasks | 256 | **512** |
-| Message size (bytes) | 65536 | **131072** |
+| Members | 16 | 32 |
+| Tasks | 256 | 512 |
+| Message size (bytes) | 65536 | 131072 |
 | Teardown timeout (ms) | 5000 | 5000 |
 
-Edits are saved as you type — there is no Save button. As soon as a field differs from the shipped value, **Restore default** appears next to it.
+Edits save as you type; there is no Save button. Once a field differs from the shipped value, Restore default appears next to it.
 
-## Good to know
+Two things are worth knowing up front.
 
-- **The values live in the profile's patch layer.** Uninstalling the bundle does not roll them back; use **Restore default** first if you want the stock numbers.
-- **Raising limits is not free.** More members means more concurrent model sessions, each costing tokens and a session directory. Raise only what you need.
-- A terminal-only profile does not render the page, but the limits still apply.
+The values are stored in your profile's patch layer, so uninstalling this plugin does not put them back. To get the defaults back, press Restore default first, then uninstall.
 
-## FAQ
+Raising a limit is not free. Each extra member is another concurrent model session, spending tokens and holding a session directory. Raise what you actually need.
 
-**Installed it and there is no page?** DSH was not fully quit. Quit from the tray and start it again.
+No page after installing? DSH was not fully quit; quit from the tray and start it again.
 
-**Changed a number and nothing happened?** Edits are written immediately and applied through the normal load path; if the plugin is an old version, reinstall it.
+Changed a number and nothing happened? Edits are written immediately and applied through the normal load path. If you are on an old version of the plugin, reinstall it.
 
-**How do I get the stock numbers back?** Press **Restore default** on each field.
+Want everything back at the shipped values? Press Restore default on each field.
 
-## Uninstall
+A terminal-only DSH does not render the page, but the limits still apply.
 
-Disable or remove it in the plugin panel. To restore the numbers as well, use **Restore default** first.
+Uninstalling is just disabling or removing it in the plugin panel. To restore the numbers as well, press Restore default first.
 
-## Technical notes
+How it works, where the four fields come from and how the values are written are in [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/team-limits/docs/implementation.en.md).
 
-How it works, where the four fields come from and how the values are written: [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/team-limits/docs/implementation.en.md)
-
-## License
-
-MIT — see [LICENSE](./LICENSE). Issues: [github.com/SpaceRelay/dsh-subagent-control/issues](https://github.com/SpaceRelay/dsh-subagent-control/issues)
+MIT, see [LICENSE](./LICENSE). Issues: [github.com/SpaceRelay/dsh-subagent-control/issues](https://github.com/SpaceRelay/dsh-subagent-control/issues).

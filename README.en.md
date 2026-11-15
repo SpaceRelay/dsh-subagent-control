@@ -1,97 +1,57 @@
 # dsh-subagent-control
 
-**Lets any agent — including a team member — list, steer and stop the subagents it started.**
+The subagents you started, still under your control.
 
-`list_subagents` · `send_subagent_message` · `interrupt_subagent`
+You start three subagents to work in parallel. Ten minutes later all you remember is "there were three": which one is still running, and how far has it got? You want to add one sentence to one of them and there is no tool for it. One has gone off track and you can only wait for it to finish.
 
-> English | [中文](README.md)
+Looking, speaking and stopping are things DSH already knows how to do. Inside a team, though, those spots were taken by Agent Team's tools of the same name, so team members could not use them on their own subagents. This plugin registers three new names globally, so anyone can, including a team member managing what it started.
 
-## When you need it
-
-- You started a few subagents to work in parallel and want to know who is still running
-- You want to add one sentence to a subagent that is already working
-- You want to stop the one that went off track
-- Inside a team, a Lead's grandchildren should still be manageable top-down
-
-## The three tools
-
-| Tool | What it does | Parameters |
-| --- | --- | --- |
-| `list_subagents` | List the subagents you started | `scope`: `children` (default, direct children) / `descendants` (the whole subtree); `include_teammates`: `true` by default |
-| `send_subagent_message` | Send one more message to a direct child | `subagent_id`, `message` |
-| `interrupt_subagent` | Stop a subagent's current turn | `subagent_id` |
-
-It looks like this:
+Once it is installed, the agent sees this:
 
 ```
 list_subagents
-→ 3b0f9c1e  running  "review the patch"  depth=1
 
-list_subagents scope=descendants
-→ 3b0f9c1e  running  "review the patch"  depth=1
-  7d2a44b0  inactive "check the tests"    depth=2
-
-send_subagent_message subagent_id=3b0f9c1e message="also look at locale/zh.json"
-→ messageId=...
-
-interrupt_subagent subagent_id=3b0f9c1e
-→ accepted=true
+3b0f9c1e  running   "review the patch"  depth=1
+7d2a44b0  inactive  "check the tests"   depth=2
 ```
 
-Each line is `id  status  "label"  depth=`. `running` means a turn is executing; `inactive` only means no turn is running right now — **the subagent is still there**, and a message wakes it.
+`running` means a turn is executing. `inactive` means no turn is running at this moment, not that the subagent is gone; a message wakes it up.
 
-Team members are continuable subagents too, so they show up in the list marked `team=teammate`. Pass `include_teammates: false` when you only want the plain subagents you started.
+Direct children only by default; add `scope=descendants` to see the whole subtree. Team members are continuable subagents too, so they show up marked `team=teammate`; pass `include_teammates: false` if you only want the plain ones.
 
-## Install
+All three tools take very little:
 
-1. Open **Settings → Plugins → Market** and search for `dsh-subagent-control`
-2. Install it
-3. **No restart needed** — this is a host-side plugin, and the three tools are available immediately
+| Tool | What it does | Parameters |
+| --- | --- | --- |
+| `list_subagents` | List the subagents you started | `scope`: `children` (default) or `descendants`; `include_teammates` defaults to `true` |
+| `send_subagent_message` | Send one more message to a direct child | `subagent_id`, `message` |
+| `interrupt_subagent` | Stop a subagent's current turn | `subagent_id` |
 
-Plugins with a settings page need a full quit and relaunch; this one does not.
+No restart is needed to install it: Settings → Plugins → Market, search for `dsh-subagent-control`, and the three tools work immediately. This package has no UI; plugins with a settings page are the ones that need a full quit and relaunch.
 
-## Optional features (four, off by default)
+There are four optional extras, all off by default. Turn them on one at a time under Settings → Plugins → Installed → dsh-subagent-control; each one registers exactly one tool:
 
 | Row in the panel | Tool | What it does |
 | --- | --- | --- |
-| Cross-layer relay | `relay_subagent_message` | Message a deeper descendant: delivered to the first hop with a request to forward it down |
-| Wait for subagents | `wait_subagents` | Wait for subagents in this turn instead of ending it first |
+| Cross-layer relay | `relay_subagent_message` | Message a deeper descendant you cannot reach: delivered to the first hop, which is asked to forward it down |
+| Wait for subagents | `wait_subagents` | Wait for subagents to finish in this turn instead of ending the turn first |
 | Release subagents | `drain_subagents` | Stop and release direct children, freeing the run they occupy |
-| Delegation budget | `subagent_budget` | Read-only report: depth limit, how many sit on each level, running / stopped |
+| Delegation budget | `subagent_budget` | Read-only report: depth limit, how many sit on each level, running and stopped counts |
 
-Turn them on one by one under **Settings → Plugins → Installed → `dsh-subagent-control`**; each one registers exactly one tool.
+Three more plugins sit alongside this one, each installed separately: `dsh-team-limits` adjusts the team limits DSH ships with, `dsh-human-wait` adjusts the PTC execution timer, and `dsh-find-session` is a UI plugin. All three change something that belongs to the host or to another plugin, so they should not switch on quietly with this package.
 
-## Related plugins
+Wondering whether it works? Ask the agent to call `list_subagents` once. These tools are for the agent; no new button appears in the UI.
 
-- [dsh-team-limits](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits) — make the Agent Team limits editable fields on the plugin page
-- [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) — keep PTC mode from burning its budget while you answer
-- [dsh-find-session](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session) — find text in the conversation or across every session
+Only one or two shown? Direct children only by default; add `scope=descendants` for the whole tree.
 
-All three install separately: they override a shipped row or another plugin's behaviour, and that should never happen implicitly.
+Can an `inactive` one still be used? Yes. It just has no turn running at this moment; a message wakes it.
 
-## FAQ
+Does it clash with `dsh-subagent-library`? It does. Both register `list_subagents` and only one global registration can win, so pick one.
 
-**How do I confirm it works?** Ask the agent to call `list_subagents` once. These tools are for the agent — no new button appears in the UI.
+It only reads the subagent list: no files written, no network access, no configuration, and no dependencies.
 
-**Why does it list only one or two?** It lists direct children by default. Use `scope=descendants` for the whole tree.
+Disable or remove it in the plugin panel and nothing is left behind.
 
-**Can an `inactive` subagent still be used?** Yes. It just has no turn running; a message wakes it.
+Implementation details, the boundary with the built-in tools and the four components are in [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/docs/implementation.en.md).
 
-**Does it clash with `dsh-subagent-library`?** Both register `list_subagents`, and only one global registration can win — pick one.
-
-## Privacy and cost
-
-- Reads the subagent registry only; writes no files, opens no network connections, ships no config
-- Zero dependencies
-
-## Uninstall
-
-Disable or remove it in the plugin panel. Nothing is left behind.
-
-## Technical notes
-
-Implementation, the boundary with the built-in tools, the four components and the tests: [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/docs/implementation.en.md)
-
-## License
-
-MIT — see [LICENSE](./LICENSE). Source and issues: [github.com/SpaceRelay/dsh-subagent-control](https://github.com/SpaceRelay/dsh-subagent-control).
+MIT, see [LICENSE](./LICENSE). Source and issues at [github.com/SpaceRelay/dsh-subagent-control](https://github.com/SpaceRelay/dsh-subagent-control).

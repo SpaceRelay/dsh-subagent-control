@@ -1,69 +1,34 @@
 # dsh-human-wait
 
-**Stops the PTC `run_code` deadline while DSH is waiting for you.**
+The PTC clock pauses while you are answering.
 
-PTC mode wraps the whole program — including any question, plan review or approval raised mid-run — in one 120-second wall clock. Think a little too long and the run is already gone:
+PTC (that is, `run_code`) wraps the whole program in a 120-second budget, and any question, plan review or approval raised mid-run counts against it. Think for three minutes and you come back to:
 
 ```
 Error: code run failed (timeout): execution deadline reached (120000ms)
 ```
 
-and the question card is reported as **interrupted**. With this plugin, the time you spend answering is no longer charged to that budget; a runaway program is still cut off when the budget runs out.
+with the question card marked interrupted. This plugin does one thing: the time you spend answering is not charged to that budget. A program that goes off and spins is still cut off when the budget runs out.
 
-> English | [中文](README.md)
+With it installed, four situations behave like this:
 
-## When you need it
+- A question inside the program, answered in 20 seconds: same as before.
+- Same program, answered after 4 minutes: it used to be aborted at 120 seconds; now it keeps waiting and the answer is delivered.
+- You never answer: it stops at the cap you set (24 hours by default) instead of hanging forever.
+- The program spins in a loop regardless of you: aborted at 120 seconds, unchanged.
 
-- You run programs in PTC mode that ask you questions or need approvals, and you want to read before answering
-- You have seen a question card flip to "interrupted", or the timeout above
+Installing takes a full quit and relaunch of DSH; the plugin has a settings page.
 
-## What it changes, and what it does not
+Settings → Plugins → Installed → Human wait has one Longest wait field (24 hours by default; unlimited removes the cap) with 1 hour / 24 hours / unlimited buttons beside it. Once the value differs from the shipped one, Restore default appears, and the card shows a one-line summary. A change applies in about 1.5 seconds, no restart.
 
-| Situation | Without it | With it |
-| --- | --- | --- |
-| A question inside the run, answered in 20 s | fine | fine |
-| Same run, answered after 4 minutes | aborted at 120 s, question shown as interrupted | keeps waiting, the answer is delivered |
-| Never answered | aborted at 120 s | aborted once the wait hits the cap (24 h by default) |
-| A program that spins for 10 minutes without asking anything | aborted at 120 s | aborted at 120 s — unchanged |
+Still timed out? Check three things: the session header shows the PTC badge, the plugin is not turned off with `enabled: false` in the profile patch, and the log has a line starting with `[dsh-human-wait]`. If the plugin did not see that particular wait, it could not pause for it.
 
-## Install
+Did the error kind become `abort`? That is expected. The plugin aborts through its own signal, so the runtime classifies it as `abort` rather than `timeout`; the text still contains `execution deadline reached`.
 
-1. Open **Settings → Plugins → Market** and search for `dsh-human-wait`
-2. Install it
-3. **Quit DSH completely, then start it again**
+Do standard sessions change? No. They never had this timeout; they wait for you indefinitely by design.
 
-## Settings
+It wraps three host service calls in memory only: no files, no network, and the conversation is untouched. Disable or remove it, restart DSH, and the host's original methods are back.
 
-**Settings → Plugins → Installed → Human wait**:
+How it works, the two settings, the fail-open behaviour and the acceptance record are in [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/human-wait/docs/implementation.en.md).
 
-- **Longest wait** (24 hours by default; "unlimited" removes the cap)
-- Quick buttons: 1 hour / 24 hours / unlimited
-- **Restore default** appears once the field differs from the shipped value
-- A one-line summary sits on the card
-
-A change takes effect in about 1.5 seconds, no restart.
-
-## FAQ
-
-**It still timed out?** Check three things: the session header shows the `PTC` badge; the plugin's `enabled` is not set to false in the profile patch; the log has a line starting with `[dsh-human-wait]`. If the wrapper did not see that wait, it cannot pause for it.
-
-**The error kind became `abort`?** Expected. The plugin aborts through its own signal, so the runtime classifies it as `abort` instead of `timeout`; the text still contains `execution deadline reached`.
-
-**Does it affect standard sessions?** No. Standard sessions never had this timeout — they wait indefinitely by design.
-
-## Privacy and cost
-
-- Wraps three host service calls in memory only; writes no files and opens no network connections
-- Does not modify the conversation, and does not change the program's own execution budget
-
-## Uninstall
-
-Disable or remove it in the plugin panel, then restart DSH; the host's original methods come back.
-
-## Technical notes
-
-How it works, the two settings, the fail-open behaviour and the acceptance record: [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/human-wait/docs/implementation.en.md)
-
-## License
-
-MIT — see [LICENSE](./LICENSE). Issues: [github.com/SpaceRelay/dsh-subagent-control/issues](https://github.com/SpaceRelay/dsh-subagent-control/issues)
+MIT, see [LICENSE](./LICENSE). Issues: [github.com/SpaceRelay/dsh-subagent-control/issues](https://github.com/SpaceRelay/dsh-subagent-control/issues).
