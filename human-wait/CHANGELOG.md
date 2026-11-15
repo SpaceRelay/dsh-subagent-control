@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.3 — 2026-11-15
+
+Documentation only, no behaviour change.
+
+- The opening line states the scope and the outcome (only in PTC mode; the 120-second deadline
+  pauses while DSH waits for you) instead of saying a timeout counts down.
+- The FAQ keeps only questions readers actually ask. The defensive "does it affect standard
+  sessions?" entry is gone: the scope already says PTC mode, so there is nothing to warn about.
+- Plain wording throughout, including the "it still timed out" checklist and the privacy note.
+
 ## 0.2.2 — 2026-11-15
 
 - Rewrote the README for users: when the plugin helps, what it does and does not change (a table

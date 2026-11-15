@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.8
+
+Documentation only, no behaviour change.
+
+- Plain wording in the README: the numbers live in your local DSH configuration rather than "the
+  profile patch layer", a raised limit is one more concurrent model call per member instead of
+  "more concurrent sessions", and a terminal-only setup is not called a profile.
+
 ## 1.3.7
 
 - Rewrote the README for users: what the four numbers do, how to reach the page, and the two things

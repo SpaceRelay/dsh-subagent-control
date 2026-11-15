@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 — 2026-11-15
+
+Documentation only, no behaviour change.
+
+- Plain wording in the README: one scan reads at most 30,000 pieces of content, instead of a
+  scanning budget counted in text blocks.
+
 ## 0.1.3 — 2026-11-15
 
 Documentation only, no behaviour change.

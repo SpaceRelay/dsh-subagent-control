@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.8
+
+Documentation only, no behaviour change.
+
+- The README explains what a subagent is before the word is used, drops internal terms (host,
+  profile patch layer, wall-clock budget) and describes the companion bundles by what they do
+  instead of justifying why they ship separately.
+
 ## 1.0.7
 
 - Rewrote the README for users instead of maintainers: what the three tools are for, how to install
