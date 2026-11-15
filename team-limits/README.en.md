@@ -4,6 +4,8 @@
 
 > English | [中文](README.md)
 
+> This line targets DSH 0.2.1 only (the experimental team plugin). From DSH 0.2.2 the plugin was renamed and three of these settings were removed — install 2.x there.
+
 ## When you need it
 
 - 16 team members by default, and that is not enough

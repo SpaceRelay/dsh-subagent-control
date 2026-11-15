@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.9
+
+Pins the supported DSH range to the 0.2.1 line. DSH 0.2.2 renamed the team plugin and removed
+`maxMembers`, `maxMessageBytes` and `disposalTimeoutMs`, which is exactly what this release writes;
+installing it there makes the team row refuse to load. `engines.dsh` is now
+`>=0.2.1-rc.1 <0.2.2-rc.1`, so the installer refuses it on 0.2.2. Install **2.x** on DSH 0.2.2+.
+
+No code change.
+
 ## 1.3.8
 
 Documentation only, no behaviour change.
