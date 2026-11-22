@@ -135,12 +135,11 @@ function createLogger(ctx) {
       }
     }
   } catch {
-    // fall through to the console fallback
+    // fall through to the silent fallback
   }
-  return {
-    info: (...args) => console.log('[dsh-human-wait]', ...args),
-    warn: (...args) => console.warn('[dsh-human-wait]', ...args),
-  }
+  // Without a host logger, stay quiet: a plugin should not write to the
+  // process console behind the host's back.
+  return { info: noop, warn: noop }
 }
 
 /**

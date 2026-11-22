@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5 — 2026-11-22
+
+No more console output when the host offers no logger. Nothing changes in normal use: the host
+always passes one, so the plugin keeps reporting through it. Only the fallback that wrote
+`[dsh-human-wait] ...` straight to the process console is gone.
+
 ## 0.2.4 — 2026-11-16
 
 The settings page saves on an explicit button instead of 700 ms after you stop typing.
