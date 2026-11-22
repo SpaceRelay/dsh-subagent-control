@@ -40,12 +40,13 @@ Nothing is written until you press **Save**; **Discard changes** puts the fields
 - These settings live in DSH's configuration on this machine; they do not belong to this plugin.
 - Members, message size and teardown timeout are handled by the subagent settings now, not here.
 - Raising the task limit is not free: more tasks means more concurrent model sessions, and more tokens. Raise only what you need.
+- **"Start new sessions with teams on" applies to every new conversation**, including one opened from its first message; reopening an old conversation keeps the choice you made there.
 
 ## FAQ
 
 **Installed it and there is no page?** DSH was not fully quit. Quit from the tray and start it again.
 
-**Changed a number and nothing happened?** Edits are written immediately and applied through the normal load path.
+**Changed a number and nothing happened?** Press **Save** to write an edit; it reaches the running plugin in about 1.5 seconds.
 
 **How do I get the shipped numbers back?** Press **Restore default** on each field.
 

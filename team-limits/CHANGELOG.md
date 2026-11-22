@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.2.0 — 2026-11-22
+
+“Start new sessions with teams on” now holds for every new conversation, not just the ones DSH
+announces as `startup`.
+
+- DSH 0.2.2 turns teams on by default only when the agent is created with `source: "startup"`. A
+  conversation opened from its first message is resumed instead, so it started with teams off even
+  though the switch was on.
+- The plugin now watches for a freshly created root session that carries no team decision and no
+  turn yet, and turns teams on for it. A session that already ran, already chose, or is a subagent
+  is left alone.
+
 ## 2.1.1
 
 Documentation only: the README now says which line to install on which DSH release. 2.x targets

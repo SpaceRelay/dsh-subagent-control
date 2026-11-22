@@ -167,11 +167,54 @@ function currentValues(config) {
   })
 }
 
+/**
+ * True for a root session that has not started a turn yet and never had the
+ * team switch written. DSH 0.2.2 itself only honours `defaultEnabled` when the
+ * agent is announced with `source: "startup"`; a conversation opened from its
+ * first message is resumed instead, so its session starts with teams off.
+ * A session that already ran a turn, or that carries a `team/mode` event, is
+ * left alone — that covers a reopened old conversation and a switch the user
+ * turned off on purpose.
+ */
+function isFreshRootSession(session) {
+  const header = session === null || session === undefined ? undefined : session.header
+  if (header?.origin === 'subagent') return false
+  if (typeof header?.delegationDepth === 'number' && header.delegationDepth > 0) return false
+  const log = session?.log
+  if (!Array.isArray(log)) return false
+  for (const event of log) {
+    if (event?.type === 'team/mode' || event?.type === 'turn/start') return false
+  }
+  return true
+}
+
+/**
+ * Turn teams on for a fresh conversation when the saved default says so.
+ * The shipped handler only sees `source: "startup"`, so this covers the other
+ * creation path; it is idempotent with that handler, and it never touches a
+ * session that already made a choice.
+ */
+function enableFreshSession(ctx, agent, config) {
+  try {
+    if (!currentValues(config).defaultEnabled) return
+    const teams = ctx.get('agentTeams')
+    if (teams === undefined || typeof teams.setEnabled !== 'function') return
+    const session = agent === null || agent === undefined ? undefined : agent.session
+    if (!isFreshRootSession(session)) return
+    void Promise.resolve(teams.setEnabled(agent, true)).catch(() => {})
+  } catch {
+    /* the switch is a convenience; never break an agent that just started */
+  }
+}
+
 export function apply(ctx, config) {
   /* This package ships its own page, so the harness must not auto-generate one. */
   ctx.inject(['settings'], (child) => {
     child.settings.configure({ auto: false }, ctx.fiber)
   })
+  if (typeof ctx.on === 'function') {
+    ctx.on('agent/created', ({ agent }) => enableFreshSession(ctx, agent, config))
+  }
   schedule(ctx, currentValues(config), 0)
   /*
    * Volatile fields are edited in place without remounting this plugin, so the

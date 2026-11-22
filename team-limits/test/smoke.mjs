@@ -20,8 +20,9 @@ const GONE = ['maxMembers', 'maxMessageBytes', 'disposalTimeoutMs']
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-function harness(initialOverride) {
+function harness(initialOverride, options = {}) {
   const writes = []
+  const listeners = new Map()
   let override = initialOverride
   const ctx = {
     settings: {
@@ -36,8 +37,17 @@ function harness(initialOverride) {
         writes.push(override)
       },
     },
-    get() {
-      return undefined
+    get(name) {
+      return name === 'agentTeams' ? options.teams : undefined
+    },
+    on(type, listener) {
+      const list = listeners.get(type) ?? []
+      list.push(listener)
+      listeners.set(type, list)
+      return () => {}
+    },
+    emit(type, payload) {
+      for (const listener of listeners.get(type) ?? []) listener(payload)
     },
     inject(_names, callback) {
       callback(ctx)
@@ -99,5 +109,59 @@ if (Config === undefined) {
   console.log('ok: fail-open without configEditor')
 }
 
-console.log('OK: 2.0.0 behaviour checks passed')
+// 4. A fresh root session is turned on when the saved default is true.
+{
+  const calls = []
+  const teams = {
+    setEnabled(agent, enabled) {
+      calls.push([agent, enabled])
+      return Promise.resolve()
+    },
+  }
+  const { ctx } = harness({ maxTasks: 1024, defaultEnabled: true }, { teams })
+  apply(ctx, { maxTasks: 1024, defaultEnabled: true })
+  const agent = { session: { header: { id: 'fresh' }, log: [{ type: 'permission/preset' }, { type: 'sandbox/mode' }] } }
+  ctx.emit('agent/created', { agent })
+  await sleep(0)
+  assert.equal(calls.length, 1, 'a fresh session must be enabled once')
+  assert.equal(calls[0][0], agent)
+  assert.equal(calls[0][1], true)
+  console.log('ok: fresh root session is enabled by default')
+}
+
+// 5. A session that already chose, or already ran, is left alone.
+{
+  const calls = []
+  const teams = { setEnabled: (agent, enabled) => calls.push([agent, enabled]) }
+  const { ctx } = harness({ maxTasks: 1024, defaultEnabled: true }, { teams })
+  apply(ctx, { maxTasks: 1024, defaultEnabled: true })
+  ctx.emit('agent/created', { agent: { session: { header: {}, log: [{ type: 'team/mode', data: { enabled: false } }] } } })
+  ctx.emit('agent/created', { agent: { session: { header: {}, log: [{ type: 'turn/start' }] } } })
+  ctx.emit('agent/created', { agent: { session: { header: { origin: 'subagent' }, log: [] } } })
+  await sleep(0)
+  assert.equal(calls.length, 0, 'chosen, used or delegated sessions must not be touched')
+  console.log('ok: no override for a session that chose, ran or is a subagent')
+}
+
+// 6. With the default off nothing happens at all.
+{
+  const calls = []
+  const teams = { setEnabled: (agent, enabled) => calls.push([agent, enabled]) }
+  const { ctx } = harness({ maxTasks: 1024, defaultEnabled: false }, { teams })
+  apply(ctx, { maxTasks: 1024, defaultEnabled: false })
+  ctx.emit('agent/created', { agent: { session: { header: {}, log: [] } } })
+  await sleep(0)
+  assert.equal(calls.length, 0)
+  console.log('ok: nothing happens while the default is off')
+}
+
+// 7. A missing team service is not fatal.
+{
+  const { ctx } = harness({ maxTasks: 1024, defaultEnabled: true }, {})
+  apply(ctx, { maxTasks: 1024, defaultEnabled: true })
+  assert.doesNotThrow(() => ctx.emit('agent/created', { agent: { session: { header: {}, log: [] } } }))
+  console.log('ok: fail-open without the agentTeams service')
+}
+
+console.log('OK: 2.2.0 behaviour checks passed')
 process.exit(0)
