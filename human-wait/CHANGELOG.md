@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.6 — 2026-11-23
+
+The settings-page description now says what the plugin does in plain words, without the internal
+wording or the raw error string. The error text it prevents is documented in the README instead.
+
 ## 0.2.5 — 2026-11-22
 
 No more console output when the host offers no logger. Nothing changes in normal use: the host

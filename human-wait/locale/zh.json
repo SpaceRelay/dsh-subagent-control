@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "人机等待",
-    "description": "DSH 在等你回答问题、审阅计划或批准请求时暂停 PTC 运行截止计时，不再把等待报成 `execution deadline reached (120000ms)`。"
+    "description": "DSH 等你的回答、审阅计划或批准请求时，不再按 120 秒把这次运行判成超时。"
   }
 }
