@@ -31,6 +31,8 @@ DSH 官方的 `subagent` 工具要传 `provider` / `model` 两个参数，前提
 
 `list_routes` 有两个可选参数：只给 `provider` 时列出该渠道的模型；`provider` 和 `model` 都给了，会额外列出这个模型支持的推理档位。
 
+点名一个模型而它不在渠道的模型清单里时，插件不会直接判它不存在，而是调 `ctx.llm.resolveModelInfo(provider, model)` 去问渠道本身。DSH 里这条接口的注释写得很直白：`catalog membership remains advisory and does not control request routing`——清单是目录，不是路由许可。两类渠道的实际差别也在这里：pi-ai 那一侧遇到没配置的模型抛 `UNKNOWN_MODEL`，DeepSeek 官方那一侧则接受任意 id、只是降级成纯文本且没有目录元数据。所以能解析就把这个模型补出来并注明“目录里没有但渠道接受”，解析失败才把渠道给出的理由一起报出来。全量列清单时不做这一步，否则用户主动隐藏的模型会被逐个问一遍、再全部冒出来。
+
 ## 派活之前先验一遍
 
 工具真正动手之前，会先调一次 `ctx.llm.resolveCallConfig({ provider, model, reasoningEffort })`。这一次调用同时回答三个问题：渠道在不在、模型在不在、这个档位这个模型支不支持。任何一项不成立都会当场抛错，用户看到的是 `provider "X" model "Y" does not support reasoning effort "Z"` 这类原文，而不是一个已经开始跑、却答不上话的子代理。
@@ -75,13 +77,13 @@ DSH 官方的 `subagent` 工具要传 `provider` / `model` 两个参数，前提
 
 ## 测试
 
-`npm test` 跑 `test/plugin.test.mjs` 与 `test/client.test.mjs`。前者用一个假的宿主上下文验证路由预检、白名单、`list_routes` 的降级分支和渲染文本；后者按 `window.__ModuleLoader__` 的方式加载 `client.js`，用一个会跑 state 与 effect 的假 React 把设置页挂起来，检查目录分组、已勾选的还原、下架路由的保留、勾选后的保存内容与 revision、目录失败后的重试、摘要视图与「设置服务缺失」这几条路径。
+`npm test` 跑 `test/plugin.test.mjs` 与 `test/client.test.mjs`。前者用一个假的宿主上下文验证路由预检、白名单、`list_routes` 的降级分支（目录读不到、点名的模型目录里没有而渠道接受、点名的模型被渠道拒绝）和渲染文本；后者按 `window.__ModuleLoader__` 的方式加载 `client.js`，用一个会跑 state 与 effect 的假 React 把设置页挂起来，检查目录分组、已勾选的还原、下架路由的保留、勾选后的保存内容与 revision、目录失败后的重试、摘要视图与「设置服务缺失」这几条路径。
 
 ## 验收记录
 
 在真实的桌面实例上做过三级验证：
 
-- 单测 33 条全绿。
+- 单测 35 条全绿。
 - 隔离实例里装上后，`list_routes` 能列出本机的渠道与模型；`subagent_route` 派出的子代理，其会话记录里的 provider、model、推理档位与请求一致；填了白名单后未列出的路由被拒，原文是 `route "X/Y" is not in this plugin's allow-list`；不存在的渠道在启动子代理之前就被拦下。
 - 在一个创建于两周前、从未记录过 policy 事件的老对话里，插件能把子代理派到另一个渠道并正常收回结果；同一个对话改走官方 `subagent` 工具的同一条路由，会被 policy 闸门拒绝。
 

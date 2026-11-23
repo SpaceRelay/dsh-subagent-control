@@ -66,6 +66,8 @@ When you want the plugin out of the way, just disable it — there is no switch 
 
 **How does it relate to the "allowed models" list in DSH settings?** They are separate. That list reserves routes for new conversations; this plugin opens a second door at runtime, meant for the old ones.
 
+**It says the channel has no such model. Should I believe it?** Just try the route. A model list is a catalogue, not a permission list — some channels happily call ids they never advertise. So when you ask about one named model the plugin asks the provider itself: if the provider accepts it, the model is shown with a note that the catalogue omitted it; only a real refusal is reported, with the provider's own reason.
+
 **Does it really work in an existing conversation?** Yes. The plugin hands the provider and model to the DSH subagent service itself, so it does not go through the note recorded when the conversation was created.
 
 **Does uninstalling leave anything behind?** No. It patches no official file, and the official subagent tool runs as before once it is gone. Ticks saved from the settings page stay in your DSH settings; delete that one entry if you want them gone.

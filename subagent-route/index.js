@@ -104,6 +104,29 @@ function messageOf(error) {
 }
 
 /**
+ * Copy the reasoning levels out of a resolved model description. Only plain
+ * fields are taken, so the result stays serialisable and detached from the
+ * objects the LLM service owns.
+ * @param {object} row
+ * @param {object} info
+ */
+function attachReasoning(row, info) {
+  if (info === undefined || info === null) return
+  if (info.reasoning === undefined || info.reasoning === null) return
+  row.reasoning = { efforts: [] }
+  if (info.reasoning.defaultEffort !== undefined) {
+    row.reasoning.default_effort = String(info.reasoning.defaultEffort)
+  }
+  for (const effort of info.reasoning.efforts ?? []) {
+    row.reasoning.efforts.push({
+      id: String(effort.id),
+      name: typeof effort.name === 'string' ? effort.name : String(effort.id),
+      ...(effort.description === undefined ? {} : { description: effort.description }),
+    })
+  }
+}
+
+/**
  * @param {object} ctx
  * @returns {{ info: Function, warn: Function }}
  */
@@ -176,6 +199,25 @@ async function preflightRoute(llm, parentOptions, requested, signal) {
     model,
     ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
   }, signal)
+}
+
+/**
+ * Ask the provider whether it will answer for a model it did not list. A model
+ * list is only a catalogue; the adapter behind the provider decides what it can
+ * actually call. Returns either the resolved description or the reason the
+ * provider refused.
+ * @param {object} llm
+ * @param {string} provider
+ * @param {string} model
+ * @param {AbortSignal} signal
+ * @returns {Promise<{ info?: object, rejection?: string }>}
+ */
+async function probeUnlistedModel(llm, provider, model, signal) {
+  try {
+    return { info: await llm.resolveModelInfo(provider, model, signal) }
+  } catch (error) {
+    return { rejection: messageOf(error) }
+  }
 }
 
 const ACTIVATION_OUTPUT = {
@@ -433,20 +475,7 @@ export function apply(ctx, config) {
           if (model.description !== undefined) row.description = model.description
           if (onlyModel !== undefined) {
             try {
-              const info = await llm.resolveModelInfo(provider.id, model.id, exec.signal)
-              if (info?.reasoning !== undefined && info.reasoning !== null) {
-                row.reasoning = { efforts: [] }
-                if (info.reasoning.defaultEffort !== undefined) {
-                  row.reasoning.default_effort = String(info.reasoning.defaultEffort)
-                }
-                for (const effort of info.reasoning.efforts ?? []) {
-                  row.reasoning.efforts.push({
-                    id: String(effort.id),
-                    name: typeof effort.name === 'string' ? effort.name : String(effort.id),
-                    ...(effort.description === undefined ? {} : { description: effort.description }),
-                  })
-                }
-              }
+              attachReasoning(row, await llm.resolveModelInfo(provider.id, model.id, exec.signal))
             } catch (error) {
               group.note = `could not read the details of ${model.id}: ${messageOf(error)}`
             }
@@ -454,8 +483,21 @@ export function apply(ctx, config) {
           group.models.push(row)
         }
 
-        if (onlyModel !== undefined && group.models.length === 0 && group.note === undefined) {
-          group.note = `"${onlyModel}" is not listed by this provider`
+        // A model missing from the catalogue is not proof that the route is
+        // dead: the provider itself is the authority, and some adapters accept
+        // any id. Ask it directly before saying the model does not exist.
+        if (onlyModel !== undefined && group.models.length === 0) {
+          const notes = group.note === undefined ? [] : [group.note]
+          const probe = await probeUnlistedModel(llm, provider.id, onlyModel, exec.signal)
+          if (probe.rejection === undefined) {
+            const row = { id: onlyModel, name: onlyModel }
+            attachReasoning(row, probe.info)
+            group.models.push(row)
+            notes.push(`"${onlyModel}" is not in this provider's model list, but the provider accepts it`)
+          } else {
+            notes.push(`"${onlyModel}" is not listed by this provider: ${probe.rejection}`)
+          }
+          group.note = notes.join('; ')
         }
         groups.push(group)
       }

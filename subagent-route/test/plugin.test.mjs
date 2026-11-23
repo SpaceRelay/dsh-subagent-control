@@ -292,16 +292,41 @@ test('list_routes narrows to one provider and reads one model\'s efforts', async
   })
 })
 
-test('list_routes explains an unknown provider and a missing model', async () => {
+test('list_routes rejects an unknown provider and a model without a provider', async () => {
   const { apply } = await load()
   const { ctx, tools } = fakeHost()
   apply(ctx, {})
 
   await assert.rejects(() => tools.get('list_routes').execute({ provider: 'nope' }, exec()), /no LLM provider is registered under "nope"/)
   await assert.rejects(() => tools.get('list_routes').execute({ model: 'model-y' }, exec()), /needs provider when model is given/)
+})
+
+test('list_routes keeps a model the catalogue omits but the provider accepts', async () => {
+  const { apply } = await load()
+  const { ctx, tools } = fakeHost()
+  apply(ctx, {})
+
+  // alpha lists only model-x, but its adapter still answers for other ids.
+  const groups = await tools.get('list_routes').execute({ provider: 'alpha', model: 'not-there' }, exec())
+  assert.deepEqual(groups[0].models.map((model) => model.id), ['not-there'])
+  assert.match(groups[0].note, /not in this provider's model list, but the provider accepts it/)
+  // The reasoning levels come from the provider, not from the catalogue.
+  assert.deepEqual(groups[0].models[0].reasoning.default_effort, 'max')
+})
+
+test('list_routes says why a model the catalogue omits is refused', async () => {
+  const { apply } = await load()
+  const llm = fakeLlm({
+    async resolveModelInfo() {
+      throw new Error('pi-ai provider "alpha" has no configured model "not-there"')
+    },
+  })
+  const { ctx, tools } = fakeHost({ llm })
+  apply(ctx, {})
 
   const groups = await tools.get('list_routes').execute({ provider: 'alpha', model: 'not-there' }, exec())
-  assert.match(groups[0].note, /"not-there" is not listed by this provider/)
+  assert.deepEqual(groups[0].models, [])
+  assert.match(groups[0].note, /"not-there" is not listed by this provider: pi-ai provider "alpha" has no configured model/)
 })
 
 test('the tool output renders a readable line per activation', async () => {

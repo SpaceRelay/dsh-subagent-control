@@ -1,6 +1,6 @@
 {
   "name": "dsh-subagent-route",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lets any agent send a subagent to a specific provider and model, in any conversation, old or new.",
   "license": "MIT",
   "author": {

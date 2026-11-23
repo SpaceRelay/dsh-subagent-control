@@ -43,6 +43,16 @@ enter through the service are not subject to it.
 `list_routes` takes two optional arguments: `provider` alone lists that provider's models;
 `provider` plus `model` also lists the reasoning levels that model supports.
 
+When one named model is missing from the provider's list, the plugin does not declare it dead: it
+calls `ctx.llm.resolveModelInfo(provider, model)` and asks the provider itself. The comment on that
+call in DSH is explicit — `catalog membership remains advisory and does not control request
+routing` — a model list is a catalogue, not a permission list. The two adapter families differ in
+practice: the pi-ai side throws `UNKNOWN_MODEL` for an id it has no configuration for, while the
+DeepSeek side accepts any id and merely downgrades to text-only without catalogue metadata. So a
+route that resolves is shown with a note that the catalogue omitted it, and only a genuine refusal
+is reported, carrying the provider's own reason. The full listing deliberately skips this probe:
+running it for every model would resurface models the user chose to hide.
+
 ## Check the route before handing out work
 
 Before doing anything, the tool calls `ctx.llm.resolveCallConfig({ provider, model, reasoningEffort })`
@@ -112,8 +122,9 @@ profile's dependencies and installed with pnpm instead.
 ## Tests
 
 `npm test` runs `test/plugin.test.mjs` and `test/client.test.mjs`. The first uses a fake host
-context to cover route preflight, the allow-list, the `list_routes` fallback branch and the rendered
-text; the second loads `client.js` the way `window.__ModuleLoader__` does, mounts the settings page
+context to cover route preflight, the allow-list, the `list_routes` fallback branches (an unreadable
+catalogue, a named model the catalogue omits but the provider accepts, a named model the provider
+refuses) and the rendered text; the second loads `client.js` the way `window.__ModuleLoader__` does, mounts the settings page
 on a fake React that runs state and effects, and walks the catalogue groups, restoring stored ticks,
 keeping a withdrawn route, what a save writes and the revision it carries, retrying a failed
 catalogue, the summary view and the "settings service missing" path.
@@ -122,7 +133,7 @@ catalogue, the summary view and the "settings service missing" path.
 
 Verified on a real desktop instance, in three levels:
 
-- 33 unit tests, all green.
+- 35 unit tests, all green.
 - In an isolated instance, `list_routes` listed this machine's providers and models; a subagent
   started by `subagent_route` recorded the requested provider, model and reasoning level; a route
   left out of the allow-list was refused with `route "X/Y" is not in this plugin's allow-list`; an

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.1 — 2026-11-24
+
+- `list_routes` no longer calls a model missing when only its catalogue is. Asking about one named
+  model now goes to the provider itself: if the provider accepts the route, the model is shown with
+  its reasoning levels and a note that the catalogue omitted it; if the provider refuses, the note
+  carries the provider's own reason. A model list is a catalogue, not a permission list — adapters
+  are free to accept ids they never advertise, and a hidden or not-yet-synced catalogue used to look
+  like a dead route.
+- The reasoning-level copy shared by both paths moved into one helper; behaviour is unchanged.
+- 35 unit tests, all green.
+
 ## 1.0.0 — 2026-11-24
 
 First release.
