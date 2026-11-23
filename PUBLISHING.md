@@ -111,11 +111,16 @@ removes it if you want the version list to start at 1.0.0.
    not in this repository and not in `dshmarket`: it is
    [awesome-dsh-plugin/awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin),
    where each plugin is one YAML file under `data/plugins/`. Write the file
-   into `submission/` here first (the four existing ones are the pattern), then
-   open a pull request that adds it there. The file name comes from the entry's
-   `url` — see `slugFor` in that repository's `scripts/lib/entries.mjs` — and
-   has to match exactly, so copy it from a dry run of their checker rather than
-   typing it. `market-entry.template.json` in this directory is the shape an
+   into `submission/` here first (the five existing ones are the pattern), then
+   open a pull request that adds it there — at most three entries per pull
+   request. The file name comes from the entry's `url` — see `slugFor` in that
+   repository's `scripts/lib/entries.mjs` — and has to match exactly, so copy it
+   from a dry run of their checker rather than typing it. The `icon` field, if
+   you set one, must be a raster image (png/jpg/jpeg/webp) hosted on GitHub —
+   `raw.githubusercontent.com` is what the existing entries use. Run that
+   checker from inside a checkout of their repository and call `readEntries()`
+   with no argument; passing a directory reads zero entries and reports a clean
+   bill of health. `market-entry.template.json` in this directory is the shape an
    older in-app index used; nothing reads it today.
 
 ## Not in the package
