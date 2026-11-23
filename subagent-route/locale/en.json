@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Subagent route",
+    "description": "Send one subagent to another provider or model, from any conversation, including ones that already exist."
+  }
+}

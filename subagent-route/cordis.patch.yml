@@ -1,0 +1,14 @@
+# dsh-subagent-route — hand a subagent task to a chosen provider and model.
+#
+# The official subagent tool only accepts a provider/model pair when the current
+# conversation recorded a model-selection policy at creation time, and the
+# settings page can only hand out models from a list fixed in the profile. Neither
+# helps a conversation that already exists.
+#
+# This plugin registers its own tool that calls the subagent service directly,
+# so any conversation — old or new — can send one subagent to another route.
+# It does not patch, replace or wrap the official tool: remove the plugin and
+# everything is back to stock behaviour.
+- insert:
+    - id: subagent-route
+      name: 'dsh-subagent-route'

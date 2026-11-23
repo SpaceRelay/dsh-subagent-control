@@ -1,0 +1,73 @@
+{
+  "name": "dsh-subagent-route",
+  "version": "1.0.0",
+  "description": "Lets any agent send a subagent to a specific provider and model, in any conversation, old or new.",
+  "license": "MIT",
+  "author": {
+    "name": "SpaceRelay",
+    "url": "https://github.com/SpaceRelay"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpaceRelay/dsh-subagent-control.git",
+    "directory": "subagent-route"
+  },
+  "homepage": "https://github.com/SpaceRelay/dsh-subagent-control/tree/main/subagent-route#readme",
+  "bugs": {
+    "url": "https://github.com/SpaceRelay/dsh-subagent-control/issues"
+  },
+  "type": "module",
+  "main": "./index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "subagent",
+    "model-routing",
+    "provider"
+  ],
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "README.en.md",
+    "docs",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.1 <0.3.0-0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test test/plugin.test.mjs test/client.test.mjs"
+  }
+}
