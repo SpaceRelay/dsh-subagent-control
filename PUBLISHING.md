@@ -61,16 +61,17 @@ If CI is unavailable, the interactive path still works:
 
 ## Companion packages
 
-Two companion packages and one sibling UI plugin ship from this repository, each
-with its own npm name, its own workflow and its own tag prefix. The workflows sit
-next to `publish.yml` and use the same trusted-publisher setup with a different
-workflow filename and `working-directory`.
+Four companion packages ship from this repository, each with its own npm name,
+its own workflow and its own tag prefix. The workflows sit next to `publish.yml`
+and use the same trusted-publisher setup with a different workflow filename and
+`working-directory`.
 
 | Directory | npm name | Workflow | Tag |
 | --- | --- | --- | --- |
 | `team-limits/` | `dsh-team-limits` | `publish-team-limits.yml` | `team-limits-v<version>` |
 | `human-wait/` | `dsh-human-wait` | `publish-human-wait.yml` | `human-wait-v<version>` |
 | `dsh-find-session/` | `dsh-find-session` | `publish-dsh-find-session.yml` | `dsh-find-session-v<version>` |
+| `subagent-route/` | `dsh-subagent-route` | `publish-subagent-route.yml` | `subagent-route-v<version>` |
 
 Trusted publishing can only be bound to a name that already exists on npm, so
 the **first** release of a new companion is published by hand:
@@ -84,6 +85,20 @@ npm publish          # publishConfig.access is already public
 
 Then bind `publish-human-wait.yml` on npmjs.com as described above, and every
 later release goes through `git tag human-wait-v<version>`.
+
+The first release of the trusted publisher needs the workflow file to be on the
+default branch already, so push the new workflow before binding it.
+
+### First-publish status
+
+| Package | First publish | Workflow takes over from |
+| --- | --- | --- |
+| `dsh-subagent-route` | 1.0.0, published by hand on 2026-11-24 | the next release, tagged `subagent-route-v1.0.1` |
+
+The interactive publish left a `0.0.0-stage` stub version in the registry: the
+CLI reserves the name that way before the real upload lands. It carries no code
+and `latest` points at the real release; `npm unpublish dsh-subagent-route@0.0.0-stage`
+removes it if you want the version list to start at 1.0.0.
 
 ## After publishing
 
