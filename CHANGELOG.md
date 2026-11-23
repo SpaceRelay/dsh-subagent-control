@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.9
+
+Packaging only, no behaviour change.
+
+- The `description` in `package.json` no longer claims the package ships exactly three tools; it
+  now says what the tools do, the same sentence the marketplace entry uses.
+
 ## 1.0.8
 
 Documentation only, no behaviour change.
