@@ -1,6 +1,6 @@
 {
   "name": "dsh-subagent-route",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lets any agent send a subagent to a specific provider and model, in any conversation, old or new.",
   "license": "MIT",
   "author": {
@@ -40,6 +40,7 @@
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
+    "assets/icon-256.png",
     "README.md",
     "README.en.md",
     "docs",

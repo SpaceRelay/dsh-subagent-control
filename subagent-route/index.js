@@ -14,9 +14,12 @@
  * the policy — only the official tool wrapper does — so no history has to be
  * rewritten and no official package has to be patched.
  *
- * The route is checked before a child session is created, so a typo in a
- * provider or model name fails here with a readable message instead of leaving
- * behind a subagent that cannot answer.
+ * The route is checked with the provider before a child session is created, so
+ * a provider name this machine has no adapter for, or a reasoning level the
+ * model does not offer, fails here with a readable message instead of leaving
+ * behind a subagent that cannot answer. A model id the catalog does not list is
+ * not refused on that basis alone: catalogs are advisory, and some adapters
+ * accept ids they never advertise.
  */
 
 let Schema
@@ -176,9 +179,12 @@ function parentAgentOptions(parent) {
 }
 
 /**
- * Ask the LLM service whether this route can be called. One call covers all
- * three mistakes a human makes: an unknown provider, an unknown model, and a
- * reasoning effort the model does not offer.
+ * Ask the LLM service whether this route can be called. One call covers the
+ * two mistakes every adapter agrees on: a provider nothing is registered for,
+ * and a reasoning effort the model does not offer. A model id outside the
+ * catalog is deliberately not one of them — catalog membership is advisory, and
+ * an adapter such as the DeepSeek one accepts any id and degrades instead of
+ * refusing.
  * @param {object} llm
  * @param {{ provider?: string, model?: string, reasoningEffort?: string }} parentOptions
  * @param {{ provider?: string, model?: string, reasoningEffort?: string }} requested
@@ -295,7 +301,7 @@ export function apply(ctx, config) {
     description:
       'Start a subagent on a provider and model you name, in any conversation, including one that was already running before this plugin existed. ' +
       'Use it when the work should run on a different channel or a cheaper or stronger model than the current one. ' +
-      'The route is checked first, so a misspelled provider, an unknown model, or an effort the model does not offer fails immediately instead of leaving a child that cannot answer. ' +
+      'The route is checked with the provider first, so a misspelled provider or a reasoning level the model does not offer fails immediately instead of leaving a child that cannot answer. ' +
       'The subagent gets no copy of this conversation; write the whole task into prompt. ' +
       'Use list_routes to see what provider and model ids exist.',
     parameters: {

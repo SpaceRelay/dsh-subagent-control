@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.2 — 2026-11-24
+
+- The preflight description now matches what it actually rejects. Both the tool description and the
+  comments say it catches a provider nothing is registered for and a reasoning level the model does
+  not offer; they no longer claim that an unknown model id is caught. Catalogues are advisory, and
+  an adapter such as the DeepSeek one accepts an id it never advertised and degrades instead of
+  refusing — that was measured, not assumed. `list_routes` remains the way to check a model id
+  before sending work to it.
+- Adds `assets/icon-256.png` for storefronts that only accept a GitHub-hosted raster image. The
+  `icon.svg` shipped in `package.json` is unchanged, so the in-app icon looks the same.
+- 35 unit tests, all green.
+
 ## 1.0.1 — 2026-11-24
 
 - `list_routes` no longer calls a model missing when only its catalogue is. Asking about one named
@@ -17,8 +29,9 @@ First release.
 
 - `subagent_route` starts a subagent on a provider and model named in the call, in any
   conversation, including ones that already existed. The route is checked with a single
-  `llm.resolveCallConfig()` before the child is created, so a wrong provider, a wrong model or an
-  unsupported reasoning level fails immediately.
+  `llm.resolveCallConfig()` before the child is created, so an unknown provider or an unsupported
+  reasoning level fails immediately. A model id the catalog does not list is not refused on that
+  basis: catalogs are advisory, and the DeepSeek adapter accepts such ids and degrades them.
 - `list_routes` lists the providers and models this machine can reach, and reads one model's
   reasoning levels on request. A provider whose catalog cannot be read still appears, with a note
   instead of a model list.

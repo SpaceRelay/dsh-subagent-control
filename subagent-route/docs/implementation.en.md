@@ -56,10 +56,17 @@ running it for every model would resurface models the user chose to hide.
 ## Check the route before handing out work
 
 Before doing anything, the tool calls `ctx.llm.resolveCallConfig({ provider, model, reasoningEffort })`
-once. That single call answers three questions: does the provider exist, does the model exist, does
-this model support this level. Any failure is thrown right there, so the user sees the original
+once. That single call answers two questions: does this machine have an adapter for the provider, and
+does this model support this level. Either failure is thrown right there, so the user sees the
+original `no adapter registered for provider "X"` or
 `provider "X" model "Y" does not support reasoning effort "Z"` instead of a child that has already
 started and cannot answer.
+
+**A model id outside the catalog is deliberately not one of those questions.** `resolveCallConfig`
+does not consult the catalog: the DeepSeek adapter accepts an id it has never seen, degrades it to a
+text-only model, and lets it through (see the `resolveModelInfo` difference in the section above). A
+mistyped model name is therefore not caught here on that provider — the child starts and may only
+fail once it runs. Ask `list_routes` about one named model to find out beforehand.
 
 Only then is the `startActivation` request assembled: `agentOptions` carries just `provider`,
 `model` and `reasoningEffort`. Everything else — the parent's preset, the depth limit — is filled in

@@ -112,7 +112,7 @@ test('the entry point declares a name and an apply function', async () => {
 
 test('every file the package ships exists', async () => {
   const pkg = JSON.parse(await read('package.json'))
-  const required = ['index.js', 'client.js', 'cordis.patch.yml', 'icon.svg', 'README.md', 'README.en.md', 'CHANGELOG.md', 'LICENSE']
+  const required = ['index.js', 'client.js', 'cordis.patch.yml', 'icon.svg', 'assets/icon-256.png', 'README.md', 'README.en.md', 'CHANGELOG.md', 'LICENSE']
   for (const name of required) {
     assert.ok(pkg.files.includes(name) || pkg.files.some((f) => f.startsWith(name.split('/')[0])), name + ' is not listed in files')
     await read(name)

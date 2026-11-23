@@ -35,7 +35,9 @@ DSH 官方的 `subagent` 工具要传 `provider` / `model` 两个参数，前提
 
 ## 派活之前先验一遍
 
-工具真正动手之前，会先调一次 `ctx.llm.resolveCallConfig({ provider, model, reasoningEffort })`。这一次调用同时回答三个问题：渠道在不在、模型在不在、这个档位这个模型支不支持。任何一项不成立都会当场抛错，用户看到的是 `provider "X" model "Y" does not support reasoning effort "Z"` 这类原文，而不是一个已经开始跑、却答不上话的子代理。
+工具真正动手之前，会先调一次 `ctx.llm.resolveCallConfig({ provider, model, reasoningEffort })`。这一次调用回答两件事：这台机器有没有为这个渠道注册适配器、这个模型支不支持所要求的推理档位。两项有一项不成立都会当场抛错，用户看到的是 `no adapter registered for provider "X"` 或 `provider "X" model "Y" does not support reasoning effort "Z"` 这类原文，而不是一个已经开始跑、却答不上话的子代理。
+
+**模型 id 不在目录里不在此列，这是实测结论。** `resolveCallConfig` 不核对目录：DeepSeek 官方适配器拿到没见过的 id 不报错，而是降级成纯文本模型照常放行（参见上一节 `resolveModelInfo` 的差别）。所以「模型名打错」在 DeepSeek 那一侧当场发现不了，子代理会被派出去、跑起来之后才可能失败。要提前发现只能点名查 `list_routes`。
 
 预检通过之后才拼 `startActivation` 的请求：`agentOptions` 里只放 `provider` / `model` / `reasoningEffort`，其余字段（包括父会话的 preset、深度上限）由子代理服务自己补齐。
 

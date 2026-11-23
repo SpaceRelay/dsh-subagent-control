@@ -93,7 +93,7 @@ default branch already, so push the new workflow before binding it.
 
 | Package | First publish | Workflow takes over from |
 | --- | --- | --- |
-| `dsh-subagent-route` | 1.0.0, published by hand on 2026-11-24 | the next release, tagged `subagent-route-v1.0.1` |
+| `dsh-subagent-route` | 1.0.0, published by hand on 2026-11-24 | every release from 1.0.1 on, tagged `subagent-route-v<version>` |
 
 The interactive publish left a `0.0.0-stage` stub version in the registry: the
 CLI reserves the name that way before the real upload lands. It carries no code
@@ -107,9 +107,16 @@ removes it if you want the version list to start at 1.0.0.
 2. Install it into a profile from the registry spec and confirm the three tool
    names appear:
    `plugin_manager install_bundle target "dsh-subagent-control@1.0.1"`.
-3. Add an entry to the market index. `market-entry.template.json` in this
-   directory has the shape (`format: 1`); replace the `<…>` placeholders, then
-   submit it through the channel the registry maintainers document.
+3. Add the plugin to the plugin list visitors actually browse. That list is
+   not in this repository and not in `dshmarket`: it is
+   [awesome-dsh-plugin/awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin),
+   where each plugin is one YAML file under `data/plugins/`. Write the file
+   into `submission/` here first (the four existing ones are the pattern), then
+   open a pull request that adds it there. The file name comes from the entry's
+   `url` — see `slugFor` in that repository's `scripts/lib/entries.mjs` — and
+   has to match exactly, so copy it from a dry run of their checker rather than
+   typing it. `market-entry.template.json` in this directory is the shape an
+   older in-app index used; nothing reads it today.
 
 ## Not in the package
 
