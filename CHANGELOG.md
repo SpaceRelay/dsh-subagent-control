@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.10
+
+Documentation only, no behaviour change.
+
+- The README opens by saying the repository holds five packages and pointing at the other four.
+- The related plugins section lists `dsh-subagent-route`, and the team-limits and human-wait lines
+  now match what those packages do today.
+
 ## 1.0.9
 
 Packaging only, no behaviour change.

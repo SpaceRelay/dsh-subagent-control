@@ -6,6 +6,8 @@
 
 > English | [中文](README.md)
 
+This repository holds five packages, each installed on its own. You are reading the first one: the subagent tools for agents. The other four are listed under Related plugins below.
+
 In DSH an agent can hand part of the work to another agent; the one that takes it is called a subagent. This plugin lets the agent that handed the work out see those subagents, send them another line, and stop them.
 
 ## When you need it
