@@ -57,11 +57,12 @@ DSH 里，智能体可以把一部分活交给另一个智能体去做，被派�
 
 ## 相关插件
 
-- [dsh-team-limits](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits) —— 把 Agent Team 的人数、任务数、消息大小改成插件页里能填的数字
-- [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) —— PTC 模式下等你回答问题时不烧掉执行预算
+- [dsh-team-limits](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits) —— 调 Agent Team 的任务数上限，以及新会话是否默认开启团队协作
+- [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) —— 等你的回答、审阅计划或批准请求时，不让 120 秒的运行限时把它判成超时
 - [dsh-find-session](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session) —— 会话内 / 跨会话关键词查找
+- [dsh-subagent-route](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/subagent-route) —— 在任何一个对话里，把子代理派到别的渠道或别的模型上
 
-它们各有各的用途，所以是三个独立的包，要单独安装，不会跟着本包装上。
+它们各有各的用途，所以是四个独立的包，要单独安装，不会跟着本包装上。
 
 ## 常见问题
 

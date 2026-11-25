@@ -57,11 +57,12 @@ Turn them on one by one under **Settings → Plugins → Installed → `dsh-suba
 
 ## Related plugins
 
-- [dsh-team-limits](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits) — make the Agent Team limits editable fields on the plugin page
-- [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) — keep PTC mode from burning its budget while you answer
+- [dsh-team-limits](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/team-limits) — set the Agent Team task limit and whether new sessions start with teams on
+- [dsh-human-wait](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/human-wait) — stop the 120-second run limit from expiring while DSH waits for your answer, plan review or approval
 - [dsh-find-session](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/dsh-find-session) — find text in the conversation or across every session
+- [dsh-subagent-route](https://github.com/SpaceRelay/dsh-subagent-control/tree/main/subagent-route) — send a subagent to another provider or model, from any conversation
 
-They each do one thing, so they are three separate packages: install the one you want. None of them come with this package.
+They each do one thing, so they are four separate packages: install the one you want. None of them come with this package.
 
 ## FAQ
 
