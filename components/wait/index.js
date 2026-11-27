@@ -1,10 +1,16 @@
 /**
- * Wait for subagents inside the current turn.
+ * Wait for the whole tree to settle inside the current turn.
  *
- * The wait is bounded and never cancels anything: it only decides whether this
- * turn keeps going or reports a timeout with what is still running.
+ * The official `wait_agent` returns as soon as the next input is pending, so it
+ * does not wait for a whole fan-out. `waitForTreeWork` does wait for every
+ * subagent under a root, but the host wraps it in no tool, and it only acts on a
+ * real tree root — anywhere else it returns false, which is easy to mistake for
+ * "nothing was waited for". So this tool refuses to run outside a root.
+ *
+ * The wait is bounded and never cancels anything: when the bound expires it
+ * reports how many subagents were still running.
  */
-import { childrenOf, requireAgent } from '../shared.js'
+import { requireAgent } from '../shared.js'
 
 export const name = 'subagent-control-wait'
 
@@ -25,8 +31,9 @@ export function apply(ctx) {
   ctx.tools.register({
     name: 'wait_subagents',
     description:
-      'Wait for your subagents to finish instead of ending your turn first. ' +
-      'The wait is bounded by timeout_seconds and never cancels them. ' +
+      'Wait for every subagent in your tree to finish instead of ending your turn first. ' +
+      'The wait is bounded by timeout_seconds and never cancels them. Only the root of a ' +
+      'subagent tree can wait on the tree; a subagent cannot. ' +
       'Useful when you want to merge their results in this same turn.',
     parameters: {
       type: 'object',
@@ -51,18 +58,24 @@ export function apply(ctx) {
     },
     async execute(args, exec) {
       const caller = requireAgent(exec, 'wait_subagents')
+      if (ctx.subagents.rootOf(caller) !== caller) {
+        throw new Error(
+          'wait_subagents only works from the root of a subagent tree; ' +
+            'a subagent cannot wait on the tree. Ask the root session instead.',
+        )
+      }
       const requested = typeof args.timeout_seconds === 'number' ? args.timeout_seconds : 120
       const timeoutMs = Math.min(Math.max(requested, 5), 600) * 1000
 
       let timedOut = false
       let timer
-      const wait = ctx.subagents.waitForChildren(caller)
-      await Promise.race([
-        wait.then(() => undefined),
+      const wait = ctx.subagents.waitForTreeWork(caller)
+      const joined = await Promise.race([
+        wait,
         new Promise((resolve) => {
           timer = setTimeout(() => {
             timedOut = true
-            resolve(undefined)
+            resolve(false)
           }, timeoutMs)
         }),
       ])
@@ -74,8 +87,10 @@ export function apply(ctx) {
       } catch {
         rows = []
       }
-      const running = childrenOf(rows).filter((row) => ctx.agents.get(row.id)?.status === 'running').length
-      return { joined: !timedOut, timedOut, running }
+      const running = rows
+        .filter((row) => row.kind === 'child')
+        .filter((row) => ctx.agents.get(row.id)?.status === 'running').length
+      return { joined: timedOut ? false : joined === true, timedOut, running }
     },
   })
 }

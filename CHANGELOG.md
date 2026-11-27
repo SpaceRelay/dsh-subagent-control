@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.0.12
+
+Two components removed, one repaired, and the tool descriptions corrected for DSH 0.2.2.
+
+- **Removed the cross-layer relay component** (`relay_subagent_message`). Its premise was that a
+  message can only reach a direct child, so a deeper descendant needed the middle hops to forward
+  it. The 0.2.2 subagent service delivers to any agent in the same tree, and the shipped
+  `send_message` does it by name, so the relay was solving a problem that no longer exists.
+- **Removed the release component** (`drain_subagents`, the "Release subagents" row). It called
+  `drainChildren`, which the host no longer has; the replacement `drainDescendants` does not
+  recycle run slots as advertised. It closes the whole tree's admission permanently — the host
+  records the root in `closingRoots`, which is only cleared when that agent is disposed — so after
+  one call the session can no longer start any subagent. Recycling slots is not worth losing the
+  ability to delegate, so the component is gone rather than reworded.
+- **Repaired the wait component** (`wait_subagents`). It called `waitForChildren`, which the host
+  no longer has either; it now calls `waitForTreeWork`, and refuses to run outside a subagent tree
+  root instead of reporting a wait that never happened.
+- **Repaired `list_subagents`**. Its default scope called `listChildren`, which the host no longer
+  has, so the plain call threw. It now reads the descendant catalog once and keeps the depth-1
+  entries for the default scope.
+- **Corrected the descriptions that 0.2.2 invalidated.** `list_subagents` no longer claims a
+  `team=teammate` / `team=lead` marker (0.2.2 has no team markers — team membership is ordinary
+  subagent ancestry), and `send_subagent_message` no longer claims only a direct child accepts a
+  message. Both descriptions now also point at the shipped tool that does the same thing.
+- **Dropped the "including a team member" clause** from the package description, both locale files,
+  both READMEs and the market submission. Once teammates are plain subagents, singling them out
+  reads like "including humans" — true but noise.
+- The optional feature count in both READMEs and in `docs/implementation*.md` drops from four to
+  two.
+
 ## 1.0.10
 
 Documentation only, no behaviour change.

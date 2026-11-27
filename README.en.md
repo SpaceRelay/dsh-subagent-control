@@ -1,6 +1,6 @@
 # dsh-subagent-control
 
-**Lets any agent — including a team member — list, steer and stop the subagents it started.**
+**Lets any agent list, steer and stop the subagents it started.**
 
 `list_subagents` · `send_subagent_message` · `interrupt_subagent`
 
@@ -15,14 +15,14 @@ In DSH an agent can hand part of the work to another agent; the one that takes i
 - You started a few subagents to work in parallel and want to know who is still running
 - You want to add one sentence to a subagent that is already working
 - You want to stop the one that went off track
-- Inside a team, a Lead's grandchildren should still be manageable top-down
+- A subagent started another level down, and you still want to manage it from above
 
 ## The three tools
 
 | Tool | What it does | Parameters |
 | --- | --- | --- |
-| `list_subagents` | List the subagents you started | `scope`: `children` (default, direct children) / `descendants` (the whole subtree); `include_teammates`: `true` by default |
-| `send_subagent_message` | Send one more message to a direct child | `subagent_id`, `message` |
+| `list_subagents` | List the subagents you started | `scope`: `children` (default, direct children) / `descendants` (the whole subtree) |
+| `send_subagent_message` | Send one more message to a subagent | `subagent_id`, `message` |
 | `interrupt_subagent` | Stop a subagent's current turn | `subagent_id` |
 
 Once it is installed, one `list_subagents` call returns a line per subagent:
@@ -36,8 +36,6 @@ Left to right: the id, the current status, the task in quotes, and the depth. `d
 
 Messaging and stopping are simpler still: `send_subagent_message` takes an id and one sentence, `interrupt_subagent` takes just the id, and they return a message id and whether the request was accepted.
 
-Team members are continuable subagents too, so they show up in the list marked `team=teammate`. Pass `include_teammates: false` when you only want the plain subagents you started.
-
 ## Install
 
 1. Open **Settings → Plugins → Market** and search for `dsh-subagent-control`
@@ -46,13 +44,11 @@ Team members are continuable subagents too, so they show up in the list marked `
 
 Plugins with a settings page need a full quit and relaunch; this one does not.
 
-## Optional features (four, off by default)
+## Optional features (two, off by default)
 
 | Row in the panel | Tool | What it does |
 | --- | --- | --- |
-| Cross-layer relay | `relay_subagent_message` | Message a deeper descendant: delivered to the first hop with a request to forward it down |
-| Wait for subagents | `wait_subagents` | Wait for subagents in this turn instead of ending it first |
-| Release subagents | `drain_subagents` | Stop and release direct children, freeing the run they occupy |
+| Wait for subagents | `wait_subagents` | Wait for the whole subtree in this turn instead of ending it first |
 | Delegation budget | `subagent_budget` | Read-only report: depth limit, how many sit on each level, running / stopped |
 
 Turn them on one by one under **Settings → Plugins → Installed → `dsh-subagent-control`**; each one registers exactly one tool.
@@ -87,7 +83,7 @@ Disable or remove it in the plugin panel. Nothing is left behind.
 
 ## Technical notes
 
-Implementation, the boundary with the built-in tools, the four components and the tests: [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/docs/implementation.en.md)
+Implementation, the boundary with the built-in tools, the two components and the tests: [docs/implementation.en.md](https://github.com/SpaceRelay/dsh-subagent-control/blob/main/docs/implementation.en.md)
 
 ## License
 

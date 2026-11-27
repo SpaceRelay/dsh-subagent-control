@@ -1,19 +1,21 @@
 /**
  * Subagent control tools.
  *
- * The Harness already registers `list_agents` / `send_message` /
- * `interrupt_agent`, but the Agent Team plugin registers tools with those same
- * three names in each team member's exact Agent scope, so inside a teammate
- * scope the team versions win: they resolve `target` against the team roster
- * only, and `interrupt_agent` is Lead-only. A team member therefore cannot
- * list, steer, or stop the subagents it started, even though
- * `ctx.subagents` already supports all three operations for any live agent.
+ * The Harness ships `list_agents` / `send_message` / `wait_agent`, and those are
+ * the tools to prefer: `list_agents` reports the whole tree from the root with
+ * path names, and `send_message` reaches any agent in the same tree. This plugin
+ * keeps three tools of its own for the gaps those leave:
  *
- * This plugin registers three differently named tools instead of fighting over
- * the taken names. They are registered globally, so the Lead and every team
- * member get them; the subagent service itself enforces that a caller can only
- * reach its own direct children (`sendMessage`) or its own descendants
- * (`interrupt`).
+ * - `list_subagents` filters instead of listing everything, so a caller can ask
+ *   for just its direct children.
+ * - `interrupt_subagent` fills the hole left by the shipped `interrupt_agent`,
+ *   which is disabled by default in the base profile.
+ * - `subagent_budget` (opt-in component) reports the delegation budget, which no
+ *   shipped tool exposes.
+ *
+ * As of DSH 0.2.2 the Agent Team plugin no longer registers tools with the shipped
+ * names, and team membership is modelled as ordinary subagent ancestry, so there
+ * is no team marker to resolve here any more.
  *
  * This module deliberately imports nothing: the tool definitions below are
  * plain registry-ready objects with explicit JSON Schemas, so the package has
@@ -37,7 +39,6 @@ const CHILD_ITEM = {
     status: { type: 'string', enum: ['running', 'inactive'] },
     parent: { type: 'string' },
     depth: { type: 'number' },
-    team: { type: 'string', enum: ['lead', 'teammate'] },
   },
 }
 
@@ -84,42 +85,13 @@ function project(agents, entry, position) {
   }
 }
 
-/**
- * Team members are continuable subagents, so the subagent catalog cannot tell a
- * teammate from a worker on its own. Resolve the Team role when the Agent Teams
- * service is present, and answer `undefined` when the agent is not in a Team.
- */
-function teamRoleResolver(ctx, caller) {
-  const teams = typeof ctx.get === 'function' ? ctx.get('agentTeams') : undefined
-  if (teams === undefined) return () => undefined
-  const roster = new Map()
-  try {
-    for (const member of teams.listMembers(caller) ?? []) roster.set(member.id, member.role)
-  } catch {
-    /* the caller is not part of a Team; the per-agent lookup below still works */
-  }
-  return (id) => {
-    const known = roster.get(id)
-    if (known !== undefined) return known
-    const agent = ctx.agents.get(id)
-    if (agent === undefined) return undefined
-    try {
-      const membership = teams.tryMembership?.(agent)
-      return membership === undefined ? undefined : membership.role
-    } catch {
-      return undefined
-    }
-  }
-}
-
 function renderEntry(entry) {
   if (entry.kind === 'diagnostic') {
     const at = entry.parent === undefined ? '' : `  parent=${entry.parent}`
     return `[${entry.reason}] ${entry.id}${at}`
   }
   const depth = entry.depth === undefined ? '' : `  depth=${entry.depth}`
-  const team = entry.team === undefined ? '' : `  team=${entry.team}`
-  return `${entry.id}  ${entry.status}  ${JSON.stringify(entry.label)}${depth}${team}`
+  return `${entry.id}  ${entry.status}  ${JSON.stringify(entry.label)}${depth}`
 }
 
 export function apply(ctx) {
@@ -128,12 +100,11 @@ export function apply(ctx) {
   ctx.tools.register({
     name: 'list_subagents',
     description:
-      'List the subagents you started, with their ids, labels and status. ' +
+      'List subagents below you, with their ids, labels and status. ' +
       'running means it is working; inactive means it is not working right now, which does not mean it is gone. ' +
-      'Team members are continuable subagents too, so they appear here marked team=teammate or team=lead; ' +
-      'use include_teammates:false when you only want the workers you started. ' +
       'You are notified when a subagent finishes, so there is no need to poll. ' +
-      'Use send_subagent_message to continue a conversation with one of them.',
+      'Use send_subagent_message to continue a conversation with one of them, ' +
+      'or list_agents for the whole tree from the root with path names.',
     parameters: {
       type: 'object',
       additionalProperties: false,
@@ -142,14 +113,8 @@ export function apply(ctx) {
           type: 'string',
           enum: ['children', 'descendants'],
           description:
-            'children (default) lists your direct children, which accept send_subagent_message in any status. ' +
-            'descendants lists the whole tree below you with each entry parent and depth; ' +
-            'entries deeper than one level accept only interrupt_subagent.',
-        },
-        include_teammates: {
-          type: 'boolean',
-          description:
-            'When false, leave out agents that belong to the current Team, keeping only plain subagents. Default true.',
+            'children (default) lists the subagents you started yourself, one level down. ' +
+            'descendants lists the whole tree below you, with each entry parent and depth.',
         },
       },
     },
@@ -164,22 +129,13 @@ export function apply(ctx) {
     },
     async execute(args, exec) {
       const caller = requireAgent(exec, 'list_subagents')
-      const roleOf = teamRoleResolver(ctx, caller)
-      const wantsTeammates = args.include_teammates !== false
-      const emit = (entry, position) => {
-        const item = project(ctx.agents, entry, position)
-        if (item === undefined) return undefined
-        const role = roleOf(item.id)
-        if (role !== undefined) item.team = role
-        if (!wantsTeammates && role !== undefined) return undefined
-        return item
-      }
-      if ((args.scope ?? 'children') === 'descendants') {
-        const rows = await ctx.subagents.listDescendants(caller.id, exec.signal)
-        return rows.map((row) => emit(row, row)).filter(Boolean)
-      }
-      const rows = await ctx.subagents.listChildren(caller.id, exec.signal)
-      return rows.map((row) => emit(row)).filter(Boolean)
+      const rows = await ctx.subagents.listDescendants(caller.id, exec.signal)
+      const scope = args.scope ?? 'children'
+      const emit = (row) => project(ctx.agents, row, row)
+      return rows
+        .filter((row) => scope === 'descendants' || row.depth === 1)
+        .map(emit)
+        .filter(Boolean)
     },
   })
 
@@ -188,10 +144,11 @@ export function apply(ctx) {
   ctx.tools.register({
     name: 'send_subagent_message',
     description:
-      'Send a follow-up message to a subagent you started. ' +
+      'Send a follow-up message to a subagent in your tree, by id. ' +
       'A running subagent receives it at its next step; a finished one is resumed with it. ' +
-      'Only a direct child accepts a message; use list_subagents to find its id. ' +
-      'This returns delivery confirmation, not the answer — the answer arrives as a new message.',
+      'Use list_subagents to find the id. ' +
+      'This returns delivery confirmation, not the answer — the answer arrives as a new message. ' +
+      'The shipped send_message does the same thing by agent name.',
     parameters: {
       type: 'object',
       additionalProperties: false,
@@ -199,7 +156,7 @@ export function apply(ctx) {
       properties: {
         subagent_id: {
           type: 'string',
-          description: 'The id of your direct subagent, from list_subagents.',
+          description: 'The id of a subagent in your tree, from list_subagents.',
         },
         message: { type: 'string', description: 'The message to deliver.' },
       },
@@ -230,7 +187,8 @@ export function apply(ctx) {
     description:
       'Ask a subagent under you to stop its current work. Returns without waiting for it to stop. ' +
       'A subagent that finished on its own is unaffected. ' +
-      'Subagents it started keep running; interrupt those separately with their own ids.',
+      'Subagents it started keep running; interrupt those separately with their own ids. ' +
+      'The shipped interrupt_agent does the same thing but is disabled by default.',
     parameters: {
       type: 'object',
       additionalProperties: false,

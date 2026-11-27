@@ -1,14 +1,12 @@
 /**
- * Offline smoke test for the four opt-in components.
+ * Offline smoke test for the two opt-in components.
  *
  * Each component is a separate module with its own switch. The fake ctx mirrors
  * the shapes the real subagent service returns: this proves the modules load,
  * the definitions are registry-shaped, and the call paths behave. It cannot
  * prove the live Harness accepts the JSON Schemas.
  */
-import { apply as relayApply } from '../components/relay/index.js'
 import { apply as waitApply } from '../components/wait/index.js'
-import { apply as drainApply } from '../components/drain/index.js'
 import { apply as budgetApply } from '../components/budget/index.js'
 
 const registered = new Map()
@@ -39,16 +37,13 @@ const ctx = {
       calls.push(['listDescendants'])
       return catalog
     },
-    async sendMessage(sender, targetId, content, options) {
-      calls.push(['sendMessage', sender.id, targetId, content[0].text, options])
-      return 'msg-1'
+    rootOf(caller) {
+      calls.push(['rootOf', caller.id])
+      return caller
     },
-    async waitForChildren(parent) {
-      calls.push(['waitForChildren', parent.id])
+    async waitForTreeWork(root) {
+      calls.push(['waitForTreeWork', root.id])
       return true
-    },
-    async drainChildren(parent, ids) {
-      calls.push(['drainChildren', parent.id, ids])
     },
   },
 }
@@ -60,9 +55,7 @@ const check = (ok, message) => {
 
 /** Each component must mount on its own and register exactly one tool. */
 for (const [label, apply, toolName] of [
-  ['relay', relayApply, 'relay_subagent_message'],
   ['wait', waitApply, 'wait_subagents'],
-  ['drain', drainApply, 'drain_subagents'],
   ['budget', budgetApply, 'subagent_budget'],
 ]) {
   const before = new Set(registered.keys())
@@ -84,11 +77,9 @@ const caller = { id: 'lead' }
 const exec = { agent: caller, signal: undefined }
 
 const budget = registered.get('subagent_budget')
-const relay = registered.get('relay_subagent_message')
 const wait = registered.get('wait_subagents')
-const drain = registered.get('drain_subagents')
 
-check(budget && relay && wait && drain, 'all four tools registered')
+check(budget && wait, 'both tools registered')
 
 const report = await budget.execute({}, exec)
 check(report.maxDepth === 4, `budget: maxDepth (${report.maxDepth})`)
@@ -98,41 +89,21 @@ check(report.deepest === 3, `budget: deepest (${report.deepest})`)
 check(report.levels.length === 3, `budget: levels (${report.levels.length})`)
 check(budget.output.render({}, report)[0].text.includes('depth limit 4'), 'budget: render')
 
-const direct = await relay.execute({ subagent_id: 'child-a', message: 'hello a' }, exec)
-check(direct.hops === 0 && direct.nextHop === 'child-a', `relay: direct child (${JSON.stringify(direct)})`)
-check(calls.at(-1)[1] === 'lead' && calls.at(-1)[2] === 'child-a', 'relay: direct target')
-
-const deep = await relay.execute({ subagent_id: 'great-c', message: 'hello c' }, exec)
-check(deep.hops === 1 && deep.nextHop === 'child-a', `relay: first hop (${JSON.stringify(deep)})`)
-check(deep.remainingDepth === 2, `relay: remainingDepth (${deep.remainingDepth})`)
-const forwarded = calls.at(-1)
-check(forwarded[2] === 'child-a' && forwarded[3].includes('great-c'), 'relay: forward text names the target')
-check(forwarded[3].includes('hello c'), 'relay: forward text carries the message')
-check(relay.output.render({}, deep)[0].text.includes('best effort'), 'relay: render')
-
-let notMine = false
-try {
-  await relay.execute({ subagent_id: 'nobody', message: 'x' }, exec)
-} catch (error) {
-  notMine = /not under this agent/.test(error.message)
-}
-check(notMine, 'relay: rejects a target outside the subtree')
-
 const waited = await wait.execute({}, exec)
 check(waited.joined === true && waited.timedOut === false, `wait: joined (${JSON.stringify(waited)})`)
 check(waited.running === 2, `wait: running (${waited.running})`)
+check(calls.some(([name, id]) => name === 'waitForTreeWork' && id === 'lead'), 'wait: asks the service for tree work')
 
-const released = await drain.execute({ subagent_ids: ['child-a'] }, exec)
-check(released.released.length === 1, 'drain: released list')
-check(calls.at(-1)[0] === 'drainChildren' && calls.at(-1)[2][0] === 'child-a', 'drain: service call')
-
-let emptyDrain = false
+const realRootOf = ctx.subagents.rootOf
+ctx.subagents.rootOf = () => ({ id: 'someone-else' })
+let waitNotRoot = false
 try {
-  await drain.execute({ subagent_ids: [] }, exec)
+  await wait.execute({}, exec)
 } catch (error) {
-  emptyDrain = /at least one/.test(error.message)
+  waitNotRoot = /only works from the root/.test(error.message)
 }
-check(emptyDrain, 'drain: rejects an empty list')
+check(waitNotRoot, 'wait: refuses to run below the root')
+ctx.subagents.rootOf = realRootOf
 
 let noAgent = false
 try {
@@ -146,4 +117,4 @@ if (problems.length > 0) {
   console.error('FAILED:\n- ' + problems.join('\n- '))
   process.exit(1)
 }
-console.log('OK: 4 opt-in components mount individually; registry shape, budget projection, relay path, wait and drain calls all behave.')
+console.log('OK: 2 opt-in components mount individually; registry shape, budget projection and wait calls all behave.')

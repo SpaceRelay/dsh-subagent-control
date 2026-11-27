@@ -24,33 +24,53 @@ const ctx = {
       return { id, status: id === 'child-running' ? 'running' : 'idle' }
     },
   },
-  agentTeams: {
-    listMembers() {
-      return [
-        { id: 'lead', role: 'lead', name: 'lead', status: 'running', diagnostics: [] },
-        { id: 'child-running', role: 'teammate', name: 'runner', status: 'running', diagnostics: [] },
-      ]
-    },
-    tryMembership(agent) {
-      return agent.id === 'child-running' ? { role: 'teammate', name: 'runner' } : undefined
-    },
-  },
-  get(name) {
-    return name === 'agentTeams' ? this.agentTeams : undefined
+  get() {
+    return undefined
   },
   subagents: {
-    async listChildren(parentId) {
-      calls.push(['listChildren', parentId])
-      return [
-        { id: 'child-running', label: 'compute pi', mode: 'continuable', createdAt: 'now' },
-        { id: 'child-idle', label: 'review notes', mode: 'continuable', createdAt: 'now' },
-        { id: 'child-oneshot', label: 'one shot', mode: 'one-shot', createdAt: 'now' },
-      ]
-    },
     async listDescendants(rootId) {
       calls.push(['listDescendants', rootId])
       return [
-        { kind: 'child', id: 'child-running', label: 'compute pi', mode: 'continuable', parentId: rootId, depth: 1, activity: 'running', hasChildren: false },
+        {
+          kind: 'child',
+          id: 'child-running',
+          label: 'compute pi',
+          mode: 'continuable',
+          parentId: rootId,
+          depth: 1,
+          activity: 'running',
+          hasChildren: true,
+        },
+        {
+          kind: 'child',
+          id: 'child-idle',
+          label: 'review notes',
+          mode: 'continuable',
+          parentId: rootId,
+          depth: 1,
+          activity: 'inactive',
+          hasChildren: false,
+        },
+        {
+          kind: 'child',
+          id: 'child-oneshot',
+          label: 'one shot',
+          mode: 'one-shot',
+          parentId: rootId,
+          depth: 1,
+          activity: 'inactive',
+          hasChildren: false,
+        },
+        {
+          kind: 'child',
+          id: 'grandchild',
+          label: 'deeper work',
+          mode: 'continuable',
+          parentId: 'child-running',
+          depth: 2,
+          activity: 'inactive',
+          hasChildren: false,
+        },
         { kind: 'diagnostic', id: 'broken', reason: 'corrupt', parentId: rootId, depth: 1 },
       ]
     },
@@ -82,51 +102,75 @@ check(list && send && interrupt, 'all three tools registered')
 
 for (const [toolName, definition] of registered) {
   check(typeof definition.name === 'string' && definition.name === toolName, `${toolName}: name`)
-  check(typeof definition.description === 'string' && definition.description.length > 40, `${toolName}: description`)
+  check(
+    typeof definition.description === 'string' && definition.description.length > 40,
+    `${toolName}: description`,
+  )
   check(definition.parameters?.type === 'object', `${toolName}: parameters.type`)
   check(typeof definition.output?.schema === 'object', `${toolName}: output.schema`)
   check(typeof definition.output?.render === 'function', `${toolName}: output.render`)
   check(typeof definition.execute === 'function', `${toolName}: execute`)
+  check(
+    !/team=|team=teammate|include_teammates/.test(definition.description ?? ''),
+    `${toolName}: no stale team wording`,
+  )
 }
 
+/* Default scope asks the service for the whole tree, then keeps depth 1. */
 const children = await list.execute({}, exec)
-check(children.length === 2, `children: one-shot filtered out (got ${children.length})`)
+check(calls.at(-1)[0] === 'listDescendants', 'children: reads the descendant catalog')
+check(children.length === 3, `children: one-shot filtered out, diagnostic kept (got ${children.length})`)
 check(children[0].status === 'running' && children[1].status === 'inactive', 'children: status mapping')
 check(children[0].kind === 'child', 'children: kind')
-check(!('depth' in children[0]), 'children: no depth at top level')
-check(children[0].team === 'teammate', `children: teammate marked (${children[0].team})`)
-check(children[1].team === undefined, 'children: plain worker unmarked')
-
-const onlyWorkers = await list.execute({ include_teammates: false }, exec)
+check(children[0].depth === 1 && children[0].parent === 'lead', 'children: position kept')
+check(!('team' in children[0]), 'children: no team marker any more')
 check(
-  onlyWorkers.length === 1 && onlyWorkers[0].id === 'child-idle',
-  `children: teammates filtered (${JSON.stringify(onlyWorkers)})`,
+  children.every((entry) => entry.depth === 1),
+  'children: deeper rows excluded from the default scope',
+)
+check(
+  children.some((entry) => entry.kind === 'diagnostic' && entry.id === 'broken'),
+  'children: a broken direct child still shows up as a diagnostic',
 )
 
 const listText = list.output.render({}, children)[0].text
-check(listText.includes('child-running') && listText.split('\n').length === 2, 'children: render')
-check(listText.includes('team=teammate'), 'children: render marks the teammate')
+check(listText.includes('child-running'), 'children: render lists the id')
+check(listText.includes('depth=1'), 'children: render shows depth')
+check(!listText.includes('team='), 'children: render has no team segment')
+check(listText.split('\n').length === 3, 'children: one line per entry')
 
 const emptyText = list.output.render({}, [])[0].text
 check(emptyText === '(no subagents)', 'children: empty render')
 
 const descendants = await list.execute({ scope: 'descendants' }, exec)
-check(descendants.length === 2, `descendants: rows (got ${descendants.length})`)
+check(descendants.length === 4, `descendants: rows including the grandchild (got ${descendants.length})`)
 check(descendants[0].depth === 1 && descendants[0].parent === 'lead', 'descendants: position')
-check(descendants[1].kind === 'diagnostic' && descendants[1].reason === 'corrupt', 'descendants: diagnostic kept')
-check(descendants[0].team === 'teammate', 'descendants: teammate marked')
+check(
+  descendants[2].id === 'grandchild' && descendants[2].depth === 2,
+  'descendants: deeper row',
+)
+check(
+  descendants.some((entry) => entry.kind === 'diagnostic' && entry.reason === 'corrupt'),
+  'descendants: diagnostic kept',
+)
 check(list.output.render({}, descendants)[0].text.includes('[corrupt]'), 'descendants: diagnostic render')
 
 const sent = await send.execute({ subagent_id: 'child-running', message: 'also try e' }, exec)
 check(sent.messageId === 'msg-1', 'send: messageId')
 check(calls.at(-1)[1] === 'lead' && calls.at(-1)[2] === 'child-running', 'send: sender + target')
 check(calls.at(-1)[3][0].type === 'text' && calls.at(-1)[3][0].text === 'also try e', 'send: content block')
-check(send.output.render({ subagent_id: 'child-running' }, sent)[0].text.includes('child-running'), 'send: render')
+check(
+  send.output.render({ subagent_id: 'child-running' }, sent)[0].text.includes('child-running'),
+  'send: render',
+)
 
 const stopped = await interrupt.execute({ subagent_id: 'child-running' }, exec)
 check(stopped.accepted === true, 'interrupt: accepted')
 const [, target, authority] = calls.at(-1)
-check(target === 'child-running' && authority.kind === 'ancestor' && authority.agent === caller, 'interrupt: authority')
+check(
+  target === 'child-running' && authority.kind === 'ancestor' && authority.agent === caller,
+  'interrupt: authority',
+)
 
 let noAgent = false
 try {
